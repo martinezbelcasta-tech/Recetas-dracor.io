@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import ProductoTerminadoForm from './ProductoTerminadoForm'
-import { exportProductoTerminado } from '../utils/excelExport'
+import { exportProductoTerminado, exportProductoTerminadoCSV } from '../utils/excelExport'
 import { getProductosTerminados, saveProductoTerminado, deleteProductoTerminado, logAction } from '../lib/db'
 
 const SPECIAL_CODES = new Set(['MODIREC01', 'CFAB01'])
@@ -76,6 +76,15 @@ function DetailView({ item, onBack, onEdit }) {
               <line x1="12" y1="15" x2="12" y2="3"/>
             </svg>
             Descargar Excel
+          </button>
+          <button onClick={() => exportProductoTerminadoCSV(item)}
+            className="flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-blue-700 border border-blue-300 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+              <polyline points="7 10 12 15 17 10"/>
+              <line x1="12" y1="15" x2="12" y2="3"/>
+            </svg>
+            Descargar CSV
           </button>
           <button onClick={onEdit}
             className="bg-amber-500 hover:bg-amber-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
@@ -294,6 +303,15 @@ export default function ProductosTerminados() {
                     <button onClick={async () => exportProductoTerminado(item)}
                       title="Descargar Excel"
                       className="px-3 py-1.5 text-xs font-medium text-gray-500 hover:text-emerald-700 hover:bg-emerald-50 rounded-lg transition-colors">
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="inline">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                        <polyline points="7 10 12 15 17 10"/>
+                        <line x1="12" y1="15" x2="12" y2="3"/>
+                      </svg>
+                    </button>
+                    <button onClick={() => exportProductoTerminadoCSV(item)}
+                      title="Descargar CSV (Olimpo)"
+                      className="px-3 py-1.5 text-xs font-medium text-gray-500 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-colors">
                       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="inline">
                         <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
                         <polyline points="7 10 12 15 17 10"/>

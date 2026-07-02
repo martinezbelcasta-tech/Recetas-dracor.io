@@ -198,6 +198,78 @@ export async function exportSemiterminado(item) {
   await triggerDownload(wb, safeName(item))
 }
 
+/* ── CSV helpers ────────────────────────────────────────────────────── */
+function csvCell(v) {
+  const s = v == null ? '' : String(v)
+  return s.includes(',') || s.includes('"') || s.includes('\n') ? `"${s.replace(/"/g, '""')}"` : s
+}
+
+function downloadCsv(rows, filename) {
+  const content = rows.map(r => r.map(csvCell).join(',')).join('\r\n')
+  const blob = new Blob(['﻿' + content], { type: 'text/csv;charset=utf-8;' })
+  const url  = URL.createObjectURL(blob)
+  const a    = document.createElement('a')
+  a.style.display = 'none'
+  a.href     = url
+  a.download = `${filename}.csv`
+  document.body.appendChild(a)
+  a.click()
+  document.body.removeChild(a)
+  setTimeout(() => URL.revokeObjectURL(url), 100)
+}
+
+export function exportSemiterminadoCSV(item) {
+  const pesoNum = parseFloat(item.peso) || 0
+  const totalKg = item.items
+    .filter(i => !SPECIAL_CODES.has(i.mp_codigo))
+    .reduce((s, i) => s + (parseFloat(i.kg) || 0), 0)
+
+  const rows = [
+    ['#', 'Código MP', 'Nombre Materia Prima', 'KG Mezcla', '%', `${item.peso_unidad || 'g'}/Pieza`, 'Unidad', 'Cód. Ubicación', 'Ubicación de Salida'],
+  ]
+  item.items.forEach((itm, idx) => {
+    const isSpecial = SPECIAL_CODES.has(itm.mp_codigo)
+    const kg        = parseFloat(itm.kg) || 0
+    const pct       = !isSpecial && totalKg > 0 ? (kg / totalKg * 100).toFixed(2) : ''
+    const xPieza   = isSpecial
+      ? (pesoNum > 0 ? pesoNum.toFixed(4) : '')
+      : (totalKg > 0 && pesoNum > 0 ? (kg / totalKg * pesoNum).toFixed(4) : '')
+    rows.push([
+      idx + 1,
+      itm.mp_codigo,
+      itm.mp_nombre,
+      isSpecial ? '' : (kg || ''),
+      pct,
+      xPieza,
+      isSpecial ? 'UNIDAD' : 'KILOGRAMO',
+      isSpecial ? 'UBI07GIF' : itm.ubi_codigo,
+      isSpecial ? 'Costos Directos de Fabricacion' : itm.ubi_nombre,
+    ])
+  })
+  rows.push(['', '', 'TOTAL MEZCLA', totalKg.toFixed(2), '100', pesoNum > 0 ? pesoNum.toFixed(4) : '', '', '', ''])
+  downloadCsv(rows, safeName(item))
+}
+
+export function exportProductoTerminadoCSV(item) {
+  const rows = [
+    ['#', 'Código', 'Nombre Componente', 'Tipo', 'Unidad', 'Cantidad', 'Cód. Ubicación', 'Ubicación de Salida'],
+  ]
+  item.items.forEach((itm, idx) => {
+    const isSpecial = SPECIAL_CODES.has(itm.comp_codigo)
+    rows.push([
+      idx + 1,
+      itm.comp_codigo,
+      itm.comp_nombre,
+      getTipo(itm.comp_codigo),
+      isSpecial ? 'UNIDAD' : itm.unidad,
+      isSpecial ? 1 : (parseFloat(itm.cantidad) || itm.cantidad || ''),
+      isSpecial ? 'UBI07GIF' : itm.ubi_codigo,
+      isSpecial ? 'Costos Directos de Fabricacion' : itm.ubi_nombre,
+    ])
+  })
+  downloadCsv(rows, safeName(item))
+}
+
 /* ── PRODUCTO TERMINADO ─────────────────────────────────────────────── */
 function getTipo(codigo) {
   if (SPECIAL_CODES.has(codigo))                          return 'Costo'
