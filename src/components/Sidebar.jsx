@@ -89,7 +89,7 @@ export default function Sidebar({ active, onNavigate, user, onLogout }) {
               <div style={{ fontSize:12, fontWeight:600, color:'rgba(255,255,255,0.85)', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', maxWidth:130 }}>
                 {user}
               </div>
-              <div style={{ fontSize:10, color:'var(--sb-muted)', marginTop:1 }}>Usuario</div>
+              <div style={{ fontSize:10, color:'var(--sb-muted)', marginTop:1 }}>Usuario: Administrador</div>
             </div>
           </div>
         )}
