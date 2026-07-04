@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { supabase } from '../lib/supabase'
 
 function EyeOpen() {
   return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" width="17" height="17"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8Z"/><circle cx="12" cy="12" r="3"/></svg>
@@ -16,7 +17,7 @@ const MODULES = [
     icon: <><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/><line x1="2" y1="20" x2="22" y2="20"/></> },
 ]
 
-export default function Login({ onLogin }) {
+export default function Login() {
   const [email, setEmail]       = useState('')
   const [password, setPassword] = useState('')
   const [showPwd, setShowPwd]   = useState(false)
@@ -29,16 +30,9 @@ export default function Login({ onLogin }) {
     setError('')
     if (!email || !password) { setError('Por favor completa todos los campos.'); return }
     setLoading(true)
-    await new Promise(r => setTimeout(r, 700))
-    if (remember) {
-      localStorage.setItem('recetas_email', email)
-      sessionStorage.removeItem('recetas_email')
-    } else {
-      sessionStorage.setItem('recetas_email', email)
-      localStorage.removeItem('recetas_email')
-    }
+    const { error: authError } = await supabase.auth.signInWithPassword({ email, password })
     setLoading(false)
-    onLogin(email)
+    if (authError) { setError('Correo o contraseña incorrectos.'); return }
   }
 
   return (

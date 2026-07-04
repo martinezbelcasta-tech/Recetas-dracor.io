@@ -1,12 +1,14 @@
 import { supabase } from './supabase'
 
 // ── activity log ─────────────────────────────────────────────────────────────
-function getCurrentUser() {
-  return localStorage.getItem('recetas_email') || sessionStorage.getItem('recetas_email') || 'desconocido'
+async function getCurrentUser() {
+  const { data: { user } } = await supabase.auth.getUser()
+  return user?.email || 'desconocido'
 }
 
 export async function logAction(accion, modulo, detalle = '') {
-  await supabase.from('activity_log').insert([{ usuario: getCurrentUser(), accion, modulo, detalle }])
+  const usuario = await getCurrentUser()
+  await supabase.from('activity_log').insert([{ usuario, accion, modulo, detalle }])
 }
 
 export async function getActivityLog() {

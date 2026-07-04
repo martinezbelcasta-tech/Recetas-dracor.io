@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { supabase } from './lib/supabase'
 import Sidebar from './components/Sidebar'
 import Login from './components/Login'
 import Semiterminados from './pages/Semiterminados'
@@ -18,15 +19,29 @@ const PAGES = {
 }
 
 export default function App() {
-  const [user, setUser] = useState(() => localStorage.getItem('recetas_email') || sessionStorage.getItem('recetas_email'))
-  const [page, setPage] = useState('semiterminados')
+  const [user, setUser]       = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [page, setPage]       = useState('semiterminados')
 
-  if (!user) return <Login onLogin={setUser} />
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null)
+      setLoading(false)
+    })
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null)
+    })
+    return () => subscription.unsubscribe()
+  }, [])
+
+  if (loading) return null
+
+  if (!user) return <Login />
 
   return (
     <div style={{ display:'flex', minHeight:'100vh', background:'var(--page-bg)' }}>
-      <Sidebar active={page} onNavigate={setPage} user={user}
-        onLogout={() => { localStorage.removeItem('recetas_email'); sessionStorage.removeItem('recetas_email'); setUser(null) }} />
+      <Sidebar active={page} onNavigate={setPage} user={user.email}
+        onLogout={() => supabase.auth.signOut()} />
       <main style={{ marginLeft:'var(--sb-width)', flex:1, overflowY:'auto', minHeight:'100vh' }}>
         {PAGES[page]}
       </main>
