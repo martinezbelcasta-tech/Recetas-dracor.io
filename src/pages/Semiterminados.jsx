@@ -239,6 +239,20 @@ export default function Semiterminados() {
     setSaving(false)
   }
 
+  const handleReplicar = (item) => {
+    setFormData({
+      ...item,
+      id: undefined,
+      codigo: '',
+      nombre: 'Copia - ' + item.nombre,
+      foto: null,
+      foto_preview: null,
+      revisado: false,
+      revisado_por: null,
+      revisado_at: null,
+    })
+  }
+
   const handleRevisar = async (id) => {
     try {
       await marcarRevisado('semiterminados', id)
@@ -389,6 +403,8 @@ export default function Semiterminados() {
                         Revisado
                       </span>
                     )}
+                    <button onClick={() => handleReplicar(item)}
+                      className="px-3 py-1.5 text-xs font-medium text-gray-500 hover:text-violet-700 hover:bg-violet-50 rounded-lg transition-colors">Replicar</button>
                     <button onClick={() => setFormData(item)}
                       className="px-3 py-1.5 text-xs font-medium text-gray-500 hover:text-amber-700 hover:bg-amber-50 rounded-lg transition-colors">Editar</button>
                     <button onClick={() => remove(item.id, item.nombre)}
