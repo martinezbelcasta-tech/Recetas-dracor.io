@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import ProductoTerminadoForm from './ProductoTerminadoForm'
 import { exportProductoTerminado, exportProductoTerminadoCSV } from '../utils/excelExport'
-import { getProductosTerminados, saveProductoTerminado, deleteProductoTerminado, logAction } from '../lib/db'
+import { getProductosTerminados, saveProductoTerminado, deleteProductoTerminado, logAction, marcarRevisado } from '../lib/db'
 
 const SPECIAL_CODES = new Set(['MODIREC01', 'CFAB01'])
 
@@ -33,7 +33,12 @@ const SAMPLE_DATA = [
   },
 ]
 
-function DetailView({ item, onBack, onEdit }) {
+function fmtFecha(iso) {
+  if (!iso) return ''
+  return new Date(iso).toLocaleDateString('es', { day: '2-digit', month: 'short', year: 'numeric' })
+}
+
+function DetailView({ item, onBack, onEdit, onRevisar }) {
   return (
     <div className="p-8">
       <button onClick={onBack}
@@ -66,8 +71,30 @@ function DetailView({ item, onBack, onEdit }) {
               </span>
             ))}
           </div>
+          {!item.revisado ? (
+            <div className="flex items-center gap-2 mt-2">
+              <span className="inline-flex items-center gap-1.5 bg-emerald-500 text-white text-xs font-bold px-2.5 py-1 rounded-full">
+                ● NUEVA
+              </span>
+              <span className="text-xs text-gray-400">Creada el {fmtFecha(item.created_at)}</span>
+            </div>
+          ) : (
+            <div className="flex items-center gap-1.5 mt-2">
+              <span className="inline-flex items-center gap-1.5 bg-gray-100 text-gray-500 text-xs font-medium px-2.5 py-1 rounded-full">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><polyline points="20 6 9 17 4 12"/></svg>
+                Revisado por {item.revisado_por} · {fmtFecha(item.revisado_at)}
+              </span>
+            </div>
+          )}
         </div>
         <div className="flex items-center gap-2">
+          {!item.revisado && (
+            <button onClick={() => onRevisar(item.id)}
+              className="flex items-center gap-1.5 px-4 py-2 text-sm font-semibold text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg transition-colors">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><polyline points="20 6 9 17 4 12"/></svg>
+              Marcar revisado
+            </button>
+          )}
           <button onClick={async () => exportProductoTerminado(item)}
             className="flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-emerald-700 border border-emerald-300 bg-emerald-50 hover:bg-emerald-100 rounded-lg transition-colors">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -195,6 +222,15 @@ export default function ProductosTerminados() {
     setSaving(false)
   }
 
+  const handleRevisar = async (id) => {
+    try {
+      await marcarRevisado('productos_terminados', id)
+      const newList = await getProductosTerminados()
+      setList(newList)
+      setView(v => v?.id === id ? (newList.find(i => i.id === id) || null) : v)
+    } catch (e) { console.error(e) }
+  }
+
   const remove = async (id, nombre) => {
     if (!confirm('¿Eliminar esta receta?')) return
     try {
@@ -221,6 +257,7 @@ export default function ProductosTerminados() {
         item={view}
         onBack={() => setView(null)}
         onEdit={() => { setFormData(view); setView(null) }}
+        onRevisar={handleRevisar}
       />
     )
   }
@@ -285,7 +322,16 @@ export default function ProductosTerminados() {
                 <td className="px-6 py-4">
                   <span className="font-mono text-sm bg-emerald-50 text-emerald-700 px-2 py-1 rounded-md border border-emerald-100">{item.codigo}</span>
                 </td>
-                <td className="px-6 py-4 font-medium text-gray-900">{item.nombre}</td>
+                <td className="px-6 py-4 font-medium text-gray-900">
+                  <div className="flex items-center gap-2">
+                    {item.nombre}
+                    {!item.revisado && (
+                      <span className="inline-flex items-center gap-1 bg-emerald-500 text-white text-xs font-bold px-2 py-0.5 rounded-full shrink-0">
+                        NUEVA
+                      </span>
+                    )}
+                  </div>
+                </td>
                 <td className="px-6 py-4">
                   <span className="text-xs bg-violet-50 text-violet-700 font-semibold px-2.5 py-1 rounded-full">
                     {item.items.length} comp.
@@ -318,6 +364,18 @@ export default function ProductosTerminados() {
                         <line x1="12" y1="15" x2="12" y2="3"/>
                       </svg>
                     </button>
+                    {!item.revisado ? (
+                      <button onClick={() => handleRevisar(item.id)}
+                        className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-semibold text-amber-700 bg-amber-50 border border-amber-300 hover:bg-amber-100 rounded-lg transition-colors">
+                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                        Por revisar
+                      </button>
+                    ) : (
+                      <span className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-semibold text-emerald-700 bg-emerald-50 border border-emerald-300 rounded-lg">
+                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><polyline points="20 6 9 17 4 12"/></svg>
+                        Revisado
+                      </span>
+                    )}
                     <button onClick={() => setFormData(item)}
                       className="px-3 py-1.5 text-xs font-medium text-gray-500 hover:text-amber-700 hover:bg-amber-50 rounded-lg transition-colors">Editar</button>
                     <button onClick={() => remove(item.id, item.nombre)}

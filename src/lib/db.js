@@ -194,6 +194,15 @@ export async function deleteProductoTerminado(id) {
   if (error) throw error
 }
 
+export async function marcarRevisado(tabla, id) {
+  const { data: { user } } = await supabase.auth.getUser()
+  const { error } = await supabase
+    .from(tabla)
+    .update({ revisado: true, revisado_por: user?.email, revisado_at: new Date().toISOString() })
+    .eq('id', id)
+  if (error) throw error
+}
+
 // ── CATÁLOGO EXTRA ───────────────────────────────────────────────────────────
 export async function getCatalogoExtra() {
   const { data } = await supabase.from('catalogo_extra').select('*').order('nombre')
