@@ -220,10 +220,12 @@ export default function Semiterminados() {
 
   useEffect(() => { load() }, [])
 
-  const filtered = list.filter(i =>
-    i.nombre.toLowerCase().includes(search.toLowerCase()) ||
-    i.codigo.toLowerCase().includes(search.toLowerCase())
-  )
+  const filtered = list
+    .filter(i =>
+      i.nombre.toLowerCase().includes(search.toLowerCase()) ||
+      i.codigo.toLowerCase().includes(search.toLowerCase())
+    )
+    .sort((a, b) => (a.revisado === b.revisado ? 0 : a.revisado ? 1 : -1))
 
   const handleSave = async (form) => {
     setSaving(true)
