@@ -76,7 +76,7 @@ export default function Consolidado() {
   const handleSave = async (item) => {
     try {
       const saved = await addCatalogoExtra(item)
-      setExtras(e => [...e, saved])
+      setExtras(e => [saved, ...e])
       logAction('crear', 'Consolidado', saved.nombre)
     } catch (e) { console.error(e) }
     setSearch(''); setCat('Todos'); setPage(1); setModal(false)

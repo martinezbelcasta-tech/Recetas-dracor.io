@@ -205,7 +205,7 @@ export async function marcarRevisado(tabla, id) {
 
 // ── CATÁLOGO EXTRA ───────────────────────────────────────────────────────────
 export async function getCatalogoExtra() {
-  const { data } = await supabase.from('catalogo_extra').select('*').order('nombre')
+  const { data } = await supabase.from('catalogo_extra').select('*').order('created_at', { ascending: false })
   return data || []
 }
 
