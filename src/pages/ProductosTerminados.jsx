@@ -218,9 +218,12 @@ export default function ProductosTerminados() {
   const handleSave = async (form) => {
     setSaving(true)
     try {
-      await saveProductoTerminado(form)
-      await load()
+      const saved = await saveProductoTerminado(form)
       logAction(form.id ? 'editar' : 'crear', 'Prod. Terminado', form.nombre)
+      setList(l => form.id
+        ? l.map(i => i.id === saved.id ? saved : i)
+        : [saved, ...l]
+      )
       setFormData(null)
     } catch (e) {
       console.error(e)

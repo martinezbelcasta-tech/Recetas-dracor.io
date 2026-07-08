@@ -44,6 +44,15 @@ async function resolvePhotoUrl(foto, foto_preview, storagePath) {
 }
 
 // ── SEMITERMINADOS ───────────────────────────────────────────────────────────
+async function fetchOneSemiterminado(id) {
+  const { data, error } = await supabase
+    .from('semiterminados').select('*, semiterminado_items(*)').eq('id', id).single()
+  if (error) throw error
+  const items = (data.semiterminado_items || []).sort((a, b) => a.sort_order - b.sort_order)
+  const { semiterminado_items: _, ...rest } = data
+  return { ...rest, foto: null, foto_preview: data.foto_url || null, items }
+}
+
 export async function getSemiterminados() {
   const { data, error } = await supabase
     .from('semiterminados')
@@ -80,37 +89,36 @@ export async function saveSemiterminado(form) {
 
   row.foto_url = await resolvePhotoUrl(foto, foto_preview, `semiterminados/${existingId || crypto.randomUUID()}`)
 
+  const toItems = (id) => items.map((it, i) => ({
+    semiterminado_id: id,
+    mp_codigo: it.mp_codigo, mp_nombre: it.mp_nombre,
+    kg: it.kg, ubi_codigo: it.ubi_codigo, ubi_nombre: it.ubi_nombre,
+    sort_order: i,
+  }))
+
+  let savedId = existingId
+
   if (existingId) {
-    const { error } = await supabase.from('semiterminados').update(row).eq('id', existingId)
-    if (error) throw error
-    await supabase.from('semiterminado_items').delete().eq('semiterminado_id', existingId)
+    const [upd, del] = await Promise.all([
+      supabase.from('semiterminados').update(row).eq('id', existingId),
+      supabase.from('semiterminado_items').delete().eq('semiterminado_id', existingId),
+    ])
+    if (upd.error) throw upd.error
+    if (del.error) throw del.error
     if (items.length) {
-      const { error: e2 } = await supabase.from('semiterminado_items').insert(
-        items.map((it, i) => ({
-          semiterminado_id: existingId,
-          mp_codigo: it.mp_codigo, mp_nombre: it.mp_nombre,
-          kg: it.kg, ubi_codigo: it.ubi_codigo, ubi_nombre: it.ubi_nombre,
-          sort_order: i,
-        }))
-      )
+      const { error: e2 } = await supabase.from('semiterminado_items').insert(toItems(existingId))
       if (e2) throw e2
     }
-    return existingId
   } else {
     const { data, error } = await supabase.from('semiterminados').insert([row]).select().single()
     if (error) throw error
+    savedId = data.id
     if (items.length) {
-      await supabase.from('semiterminado_items').insert(
-        items.map((it, i) => ({
-          semiterminado_id: data.id,
-          mp_codigo: it.mp_codigo, mp_nombre: it.mp_nombre,
-          kg: it.kg, ubi_codigo: it.ubi_codigo, ubi_nombre: it.ubi_nombre,
-          sort_order: i,
-        }))
-      )
+      await supabase.from('semiterminado_items').insert(toItems(savedId))
     }
-    return data.id
   }
+
+  return fetchOneSemiterminado(savedId)
 }
 
 export async function deleteSemiterminado(id) {
@@ -119,6 +127,15 @@ export async function deleteSemiterminado(id) {
 }
 
 // ── PRODUCTOS TERMINADOS ─────────────────────────────────────────────────────
+async function fetchOneProducto(id) {
+  const { data, error } = await supabase
+    .from('productos_terminados').select('*, producto_items(*)').eq('id', id).single()
+  if (error) throw error
+  const items = (data.producto_items || []).sort((a, b) => a.sort_order - b.sort_order)
+  const { producto_items: _, ...rest } = data
+  return { ...rest, foto: null, foto_preview: data.foto_url || null, items }
+}
+
 export async function getProductosTerminados() {
   const { data, error } = await supabase
     .from('productos_terminados')
@@ -155,38 +172,37 @@ export async function saveProductoTerminado(form) {
 
   row.foto_url = await resolvePhotoUrl(foto, foto_preview, `productos/${existingId || crypto.randomUUID()}`)
 
+  const toItems = (id) => items.map((it, i) => ({
+    producto_id: id,
+    comp_codigo: it.comp_codigo, comp_nombre: it.comp_nombre,
+    unidad: it.unidad, cantidad: it.cantidad,
+    ubi_codigo: it.ubi_codigo, ubi_nombre: it.ubi_nombre,
+    sort_order: i,
+  }))
+
+  let savedId = existingId
+
   if (existingId) {
-    const { error } = await supabase.from('productos_terminados').update(row).eq('id', existingId)
-    if (error) throw error
-    await supabase.from('producto_items').delete().eq('producto_id', existingId)
+    const [upd, del] = await Promise.all([
+      supabase.from('productos_terminados').update(row).eq('id', existingId),
+      supabase.from('producto_items').delete().eq('producto_id', existingId),
+    ])
+    if (upd.error) throw upd.error
+    if (del.error) throw del.error
     if (items.length) {
-      await supabase.from('producto_items').insert(
-        items.map((it, i) => ({
-          producto_id: existingId,
-          comp_codigo: it.comp_codigo, comp_nombre: it.comp_nombre,
-          unidad: it.unidad, cantidad: it.cantidad,
-          ubi_codigo: it.ubi_codigo, ubi_nombre: it.ubi_nombre,
-          sort_order: i,
-        }))
-      )
+      const { error: e2 } = await supabase.from('producto_items').insert(toItems(existingId))
+      if (e2) throw e2
     }
-    return existingId
   } else {
     const { data, error } = await supabase.from('productos_terminados').insert([row]).select().single()
     if (error) throw error
+    savedId = data.id
     if (items.length) {
-      await supabase.from('producto_items').insert(
-        items.map((it, i) => ({
-          producto_id: data.id,
-          comp_codigo: it.comp_codigo, comp_nombre: it.comp_nombre,
-          unidad: it.unidad, cantidad: it.cantidad,
-          ubi_codigo: it.ubi_codigo, ubi_nombre: it.ubi_nombre,
-          sort_order: i,
-        }))
-      )
+      await supabase.from('producto_items').insert(toItems(savedId))
     }
-    return data.id
   }
+
+  return fetchOneProducto(savedId)
 }
 
 export async function deleteProductoTerminado(id) {

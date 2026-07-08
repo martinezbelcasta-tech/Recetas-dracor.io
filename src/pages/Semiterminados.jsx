@@ -235,9 +235,12 @@ export default function Semiterminados() {
   const handleSave = async (form) => {
     setSaving(true)
     try {
-      await saveSemiterminado(form)
-      await load()
+      const saved = await saveSemiterminado(form)
       logAction(form.id ? 'editar' : 'crear', 'Semiterminado', form.nombre)
+      setList(l => form.id
+        ? l.map(i => i.id === saved.id ? saved : i)
+        : [saved, ...l]
+      )
       setFormData(null)
     } catch (e) {
       console.error(e)
