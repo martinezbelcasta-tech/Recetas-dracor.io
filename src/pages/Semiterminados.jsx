@@ -5,7 +5,7 @@ import { getSemiterminados, saveSemiterminado, deleteSemiterminado, logAction, m
 import Pagination from '../components/Pagination'
 
 const SPECIAL_CODES = new Set(['MODIREC01', 'CFAB01'])
-const PER_PAGE = 50
+const PER_PAGE = 10
 
 function fmt(n) {
   if (!isFinite(n) || n === 0) return '—'

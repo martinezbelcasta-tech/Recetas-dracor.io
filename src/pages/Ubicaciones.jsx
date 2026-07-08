@@ -1,5 +1,8 @@
 import { useState, useMemo, useEffect } from 'react'
 import { getUbiExtra, addUbiExtra, deleteUbiExtra, logAction } from '../lib/db'
+import Pagination from '../components/Pagination'
+
+const PER_PAGE = 10
 
 const RAW = [
   { codigo: 'UBI0021-05', nombre: 'CONSIGNA_ANGEL TORRES REYES (Mejicanos Ayutuxte)', nivel: 4 },
@@ -182,6 +185,7 @@ export default function Ubicaciones() {
   const [search, setSearch] = useState('')
   const [nivelFilter, setNivelFilter] = useState('')
   const [modal, setModal] = useState(false)
+  const [page, setPage] = useState(1)
 
   useEffect(() => {
     getUbiExtra().then(setExtras).catch(console.error)
@@ -197,6 +201,8 @@ export default function Ubicaciones() {
       return matchSearch && matchNivel
     })
   }, [all, search, nivelFilter])
+
+  const paginated = filtered.slice((page - 1) * PER_PAGE, page * PER_PAGE)
 
   const handleSave = async (item) => {
     try {
@@ -251,14 +257,14 @@ export default function Ubicaciones() {
           </svg>
           <input
             value={search}
-            onChange={e => setSearch(e.target.value)}
+            onChange={e => { setSearch(e.target.value); setPage(1) }}
             className="border border-gray-200 rounded-lg pl-9 pr-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white w-72"
             placeholder="Buscar por código o nombre…"
           />
         </div>
         <select
           value={nivelFilter}
-          onChange={e => setNivelFilter(e.target.value)}
+          onChange={e => { setNivelFilter(e.target.value); setPage(1) }}
           className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-gray-700"
         >
           {NIVEL_OPTIONS.map(o => (
@@ -267,7 +273,7 @@ export default function Ubicaciones() {
         </select>
         {(search || nivelFilter) && (
           <button
-            onClick={() => { setSearch(''); setNivelFilter('') }}
+            onClick={() => { setSearch(''); setNivelFilter(''); setPage(1) }}
             className="text-sm text-gray-400 hover:text-gray-700 transition-colors"
           >
             Limpiar
@@ -297,7 +303,7 @@ export default function Ubicaciones() {
                 </td>
               </tr>
             )}
-            {filtered.map(u => {
+            {paginated.map(u => {
               const badge = NIVEL_BADGE[u.nivel]
               return (
                 <tr key={u.codigo} className="hover:bg-blue-50/20 transition-colors group">
@@ -332,6 +338,7 @@ export default function Ubicaciones() {
             })}
           </tbody>
         </table>
+        <Pagination page={page} total={filtered.length} perPage={PER_PAGE} onPage={setPage} />
       </div>
 
       {modal && <AgregarModal onClose={() => setModal(false)} onSave={handleSave} />}

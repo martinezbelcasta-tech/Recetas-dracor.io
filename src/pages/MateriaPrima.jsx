@@ -1,5 +1,8 @@
 import { useState, useMemo, useEffect } from 'react'
 import { getMpExtra, addMpExtra, deleteMpExtra, logAction } from '../lib/db'
+import Pagination from '../components/Pagination'
+
+const PER_PAGE = 10
 
 const RAW = [
   { codigo: 'MP10102', nombre: 'POLIPROPILENO LLD' },
@@ -232,6 +235,7 @@ export default function MateriaPrima() {
   const [search, setSearch] = useState('')
   const [cat, setCat] = useState('Todos')
   const [modal, setModal] = useState(false)
+  const [page, setPage] = useState(1)
 
   useEffect(() => {
     getMpExtra().then(data => setExtras(data.map(r => ({ ...r, categoria: getCategoria(r.nombre) })))).catch(console.error)
@@ -252,6 +256,8 @@ export default function MateriaPrima() {
     Object.fromEntries(
       Object.keys(CATEGORIA_STYLE).map(c => [c, all.filter(m => m.categoria === c).length])
     ), [all])
+
+  const paginated = filtered.slice((page - 1) * PER_PAGE, page * PER_PAGE)
 
   const handleSave = async (item) => {
     try {
@@ -293,7 +299,7 @@ export default function MateriaPrima() {
           return (
             <button
               key={c}
-              onClick={() => setCat(c)}
+              onClick={() => { setCat(c); setPage(1) }}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold border transition-all ${
                 isActive
                   ? c === 'Todos'
@@ -329,7 +335,7 @@ export default function MateriaPrima() {
           </svg>
           <input
             value={search}
-            onChange={e => setSearch(e.target.value)}
+            onChange={e => { setSearch(e.target.value); setPage(1) }}
             className="border border-gray-200 rounded-lg pl-9 pr-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white w-72"
             placeholder="Buscar por código o nombre…"
           />
@@ -363,7 +369,7 @@ export default function MateriaPrima() {
                 </td>
               </tr>
             )}
-            {filtered.map(m => {
+            {paginated.map(m => {
               const style = CATEGORIA_STYLE[m.categoria]
               return (
                 <tr key={m.codigo} className="hover:bg-gray-50/80 transition-colors group">
@@ -397,6 +403,7 @@ export default function MateriaPrima() {
             })}
           </tbody>
         </table>
+        <Pagination page={page} total={filtered.length} perPage={PER_PAGE} onPage={setPage} />
       </div>
 
       {modal && <AgregarModal onClose={() => setModal(false)} onSave={handleSave} />}

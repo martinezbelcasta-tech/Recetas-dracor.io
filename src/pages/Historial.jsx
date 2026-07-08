@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { getActivityLog } from '../lib/db'
 import Pagination from '../components/Pagination'
 
-const PER_PAGE = 50
+const PER_PAGE = 10
 
 const ACCION = {
   crear:    { label: 'Crear',    cls: 'bg-emerald-100 text-emerald-700' },

@@ -58,7 +58,7 @@ const CAT_STYLE = {
 }
 
 const CATEGORIAS = ['Todos', 'Prod. Terminado', 'Semiterminado', 'Empaque', 'Otro']
-const PER_PAGE = 50
+const PER_PAGE = 10
 
 export default function Consolidado() {
   const [extras, setExtras] = useState([])

@@ -5,7 +5,7 @@ import { getProductosTerminados, saveProductoTerminado, deleteProductoTerminado,
 import Pagination from '../components/Pagination'
 
 const SPECIAL_CODES = new Set(['MODIREC01', 'CFAB01'])
-const PER_PAGE = 50
+const PER_PAGE = 10
 
 function getCategoriaBadge(codigo) {
   if (SPECIAL_CODES.has(codigo)) return { label: 'Costo', cls: 'bg-amber-100 text-amber-700' }
