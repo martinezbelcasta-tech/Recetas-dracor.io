@@ -2,8 +2,10 @@ import { useState, useEffect } from 'react'
 import SemiterminadoForm from './SemiterminadoForm'
 import { exportSemiterminado, exportSemiterminadoCSV } from '../utils/excelExport'
 import { getSemiterminados, saveSemiterminado, deleteSemiterminado, logAction, marcarRevisado } from '../lib/db'
+import Pagination from '../components/Pagination'
 
 const SPECIAL_CODES = new Set(['MODIREC01', 'CFAB01'])
+const PER_PAGE = 50
 
 function fmt(n) {
   if (!isFinite(n) || n === 0) return '—'
@@ -211,6 +213,7 @@ export default function Semiterminados() {
   const [view, setView]         = useState(null)
   const [formData, setFormData] = useState(null)
   const [search, setSearch]     = useState('')
+  const [page, setPage]         = useState(1)
 
   const load = async () => {
     setLoading(true)
@@ -226,6 +229,8 @@ export default function Semiterminados() {
       i.codigo.toLowerCase().includes(search.toLowerCase())
     )
     .sort((a, b) => (a.revisado === b.revisado ? 0 : a.revisado ? 1 : -1))
+
+  const paginated = filtered.slice((page - 1) * PER_PAGE, page * PER_PAGE)
 
   const handleSave = async (form) => {
     setSaving(true)
@@ -324,7 +329,7 @@ export default function Semiterminados() {
         <svg className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
           <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
         </svg>
-        <input value={search} onChange={e => setSearch(e.target.value)}
+        <input value={search} onChange={e => { setSearch(e.target.value); setPage(1) }}
           className="w-full max-w-xs border border-gray-200 rounded-lg pl-9 pr-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
           placeholder="Buscar por nombre o codigo..." />
       </div>
@@ -351,7 +356,7 @@ export default function Semiterminados() {
                 </td>
               </tr>
             )}
-            {filtered.map(item => (
+            {paginated.map(item => (
               <tr key={item.id} className="hover:bg-blue-50/20 transition-colors">
                 <td className="px-6 py-4">
                   <span className="font-mono text-sm bg-slate-100 text-slate-700 px-2 py-1 rounded-md">{item.codigo}</span>
@@ -417,6 +422,7 @@ export default function Semiterminados() {
             ))}
           </tbody>
         </table>
+        <Pagination page={page} total={filtered.length} perPage={PER_PAGE} onPage={setPage} />
       </div>
     </div>
   )

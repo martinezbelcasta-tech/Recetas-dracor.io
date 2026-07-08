@@ -2,8 +2,10 @@ import { useState, useEffect } from 'react'
 import ProductoTerminadoForm from './ProductoTerminadoForm'
 import { exportProductoTerminado, exportProductoTerminadoCSV } from '../utils/excelExport'
 import { getProductosTerminados, saveProductoTerminado, deleteProductoTerminado, logAction, marcarRevisado } from '../lib/db'
+import Pagination from '../components/Pagination'
 
 const SPECIAL_CODES = new Set(['MODIREC01', 'CFAB01'])
+const PER_PAGE = 50
 
 function getCategoriaBadge(codigo) {
   if (SPECIAL_CODES.has(codigo)) return { label: 'Costo', cls: 'bg-amber-100 text-amber-700' }
@@ -194,6 +196,7 @@ export default function ProductosTerminados() {
   const [view, setView]         = useState(null)
   const [formData, setFormData] = useState(null)
   const [search, setSearch]     = useState('')
+  const [page, setPage]         = useState(1)
 
   const load = async () => {
     setLoading(true)
@@ -209,6 +212,8 @@ export default function ProductosTerminados() {
       i.codigo.toLowerCase().includes(search.toLowerCase())
     )
     .sort((a, b) => (a.revisado === b.revisado ? 0 : a.revisado ? 1 : -1))
+
+  const paginated = filtered.slice((page - 1) * PER_PAGE, page * PER_PAGE)
 
   const handleSave = async (form) => {
     setSaving(true)
@@ -307,7 +312,7 @@ export default function ProductosTerminados() {
         <svg className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
           <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
         </svg>
-        <input value={search} onChange={e => setSearch(e.target.value)}
+        <input value={search} onChange={e => { setSearch(e.target.value); setPage(1) }}
           className="w-full max-w-xs border border-gray-200 rounded-lg pl-9 pr-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white"
           placeholder="Buscar por nombre o código…" />
       </div>
@@ -333,7 +338,7 @@ export default function ProductosTerminados() {
                 </td>
               </tr>
             )}
-            {filtered.map(item => (
+            {paginated.map(item => (
               <tr key={item.id} className="hover:bg-emerald-50/20 transition-colors">
                 <td className="px-6 py-4">
                   <span className="font-mono text-sm bg-emerald-50 text-emerald-700 px-2 py-1 rounded-md border border-emerald-100">{item.codigo}</span>
@@ -404,6 +409,7 @@ export default function ProductosTerminados() {
             ))}
           </tbody>
         </table>
+        <Pagination page={page} total={filtered.length} perPage={PER_PAGE} onPage={setPage} />
       </div>
     </div>
   )
