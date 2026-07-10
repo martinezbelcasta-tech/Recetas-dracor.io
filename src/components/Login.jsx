@@ -30,7 +30,9 @@ export default function Login() {
     setError('')
     if (!email || !password) { setError('Por favor completa todos los campos.'); return }
     setLoading(true)
-    const { error: authError } = await supabase.auth.signInWithPassword({ email, password })
+    const { error: authError } = await supabase.auth.signInWithPassword({ email, password,
+      options: { persistSession: remember },
+    })
     setLoading(false)
     if (authError) { setError('Correo o contraseña incorrectos.'); return }
   }

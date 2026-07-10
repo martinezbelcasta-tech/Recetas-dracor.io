@@ -28,8 +28,9 @@ export default function App() {
       setUser(session?.user ?? null)
       setLoading(false)
     })
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null)
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'SIGNED_OUT') setUser(null)
+      else if (session?.user) setUser(session.user)
     })
     return () => subscription.unsubscribe()
   }, [])
