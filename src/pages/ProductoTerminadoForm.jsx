@@ -3,7 +3,7 @@ import { PRODUCTOS } from '../data/consolidado'
 import { UBI_LIST } from '../data/ubicaciones'
 import { getCatalogoExtra, getUbiExtra } from '../lib/db'
 
-const UNIDADES_PT = ['Kilogramo', 'Unidad', 'Pares', 'Libras', 'Metro']
+const UNIDADES_PT = ['Kilogramo', 'Unidad', 'Pares', 'Libras', 'Metro', 'ML']
 
 const COST_ITEMS = [
   { codigo: 'MODIREC01', nombre: 'Mano de Obra Directa' },
