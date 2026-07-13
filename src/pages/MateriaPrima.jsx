@@ -159,10 +159,16 @@ const RAW = [
   { codigo: 'MP70107', nombre: 'POLIPROPILENO MOLIDO NARANJA' },
   { codigo: 'MP70108', nombre: 'GRAY BLANCO HUEZO' },
   { codigo: 'MP80108', nombre: 'POLIPROPILENO CLARIFICADO TAIWAN' },
+  { codigo: 'ME20002600010', nombre: 'TINTA IMPRESORA SUNTHINKS NEGRA' },
+  { codigo: 'ME20002600101', nombre: 'TINTA IMPRESORA SUNTHINKS CYAN' },
+  { codigo: 'ME20002600214', nombre: 'TINTA IMPRESORA SUNTHINKS AMARILLO' },
+  { codigo: 'ME20002600308', nombre: 'TINTA IMPRESORA SUNTHINKS BLANCO' },
+  { codigo: 'ME20002600404', nombre: 'TINTA IMPRESORA SUNTHINKS MAGENTA' },
 ]
 
 function getCategoria(nombre) {
   const n = nombre.toUpperCase()
+  if (n.includes('TINTA')) return 'Tinta'
   if (n.includes('COLORANTE') || n.includes('ADITIVO')) return 'Colorante'
   if (n.includes('PELETIZADO') || n.includes('PELET')) return 'Peletizado'
   if (n.includes('RECICLADO')) return 'Reciclado'
@@ -182,6 +188,7 @@ const CATEGORIA_STYLE = {
   'Gray Taiwan':   { cls: 'bg-slate-100 text-slate-700',   dot: 'bg-slate-500' },
   'Clarificado':   { cls: 'bg-cyan-50 text-cyan-700',      dot: 'bg-cyan-500' },
   'Muestra':       { cls: 'bg-orange-50 text-orange-700',  dot: 'bg-orange-400' },
+  'Tinta':         { cls: 'bg-fuchsia-50 text-fuchsia-700', dot: 'bg-fuchsia-500' },
 }
 
 const DATA = RAW.map(r => ({ ...r, categoria: getCategoria(r.nombre) }))
