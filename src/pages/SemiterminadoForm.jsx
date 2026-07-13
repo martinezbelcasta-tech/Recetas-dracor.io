@@ -7,8 +7,10 @@ import { getMpExtra, getUbiExtra } from '../lib/db'
 const COST_ITEMS = [
   { codigo: 'MODIREC01', nombre: 'Mano de Obra Directa' },
   { codigo: 'CFAB01',    nombre: 'Carga Fabril' },
+  { codigo: 'MODIREC02', nombre: 'Mano de Obra Directa Impresion Laser' },
+  { codigo: 'CFAB02',    nombre: 'Carga Fabril Impresion Laser' },
 ]
-const SPECIAL_CODES = new Set(['MODIREC01', 'CFAB01'])
+const SPECIAL_CODES = new Set(['MODIREC01', 'CFAB01', 'MODIREC02', 'CFAB02'])
 
 function matchTokens(query, item) {
   if (!query.trim()) return true
@@ -375,6 +377,7 @@ export default function SemiterminadoForm({ initial, onSave, onCancel, saving })
             <tbody className="divide-y divide-gray-50">
               {form.items.map((item, idx) => {
                 const isSpecial = SPECIAL_CODES.has(item.mp_codigo)
+                const isTinta   = !isSpecial && (item.mp_nombre || '').toUpperCase().includes('TINTA')
                 const kg        = isSpecial ? pesoNum : (parseFloat(item.kg) || 0)
                 const pct       = (!isSpecial && totalKg > 0) ? (kg / totalKg) * 100 : null
                 const xPieza    = (!isSpecial && totalKg > 0 && pesoNum > 0) ? (kg / totalKg) * pesoNum : null
@@ -407,7 +410,9 @@ export default function SemiterminadoForm({ initial, onSave, onCancel, saving })
                     <td className="px-4 py-1.5 text-center">
                       {isSpecial
                         ? <span className="text-xs font-bold bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full">UNIDAD</span>
-                        : <span className="text-xs bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full">KILOGRAMO</span>
+                        : isTinta
+                          ? <span className="text-xs font-bold bg-fuchsia-100 text-fuchsia-700 px-2 py-0.5 rounded-full">ML</span>
+                          : <span className="text-xs bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full">KILOGRAMO</span>
                       }
                     </td>
 
