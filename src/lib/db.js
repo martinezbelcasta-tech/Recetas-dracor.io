@@ -92,7 +92,7 @@ export async function saveSemiterminado(form) {
   const toItems = (id) => items.map((it, i) => ({
     semiterminado_id: id,
     mp_codigo: it.mp_codigo, mp_nombre: it.mp_nombre,
-    kg: it.kg, ubi_codigo: it.ubi_codigo, ubi_nombre: it.ubi_nombre,
+    kg: it.kg, unidad: it.unidad || null, ubi_codigo: it.ubi_codigo, ubi_nombre: it.ubi_nombre,
     sort_order: i,
   }))
 

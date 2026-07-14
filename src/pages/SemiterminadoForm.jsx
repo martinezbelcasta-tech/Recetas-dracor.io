@@ -133,8 +133,10 @@ function autoCodigo(nombre) {
 }
 
 function newItem() {
-  return { id: Date.now() + Math.random(), mp_codigo: '', mp_nombre: '', kg: '', ubi_codigo: '', ubi_nombre: '' }
+  return { id: Date.now() + Math.random(), mp_codigo: '', mp_nombre: '', kg: '', unidad: '', ubi_codigo: '', ubi_nombre: '' }
 }
+
+const UNIDADES_SEMI = ['KILOGRAMO', 'ML', 'PAR', 'LB']
 
 function fmt(n) {
   if (!isFinite(n) || n === 0) return '—'
@@ -410,9 +412,12 @@ export default function SemiterminadoForm({ initial, onSave, onCancel, saving })
                     <td className="px-4 py-1.5 text-center">
                       {isSpecial
                         ? <span className="text-xs font-bold bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full">UNIDAD</span>
-                        : isTinta
-                          ? <span className="text-xs font-bold bg-fuchsia-100 text-fuchsia-700 px-2 py-0.5 rounded-full">ML</span>
-                          : <span className="text-xs bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full">KILOGRAMO</span>
+                        : <select
+                            value={item.unidad || (isTinta ? 'ML' : 'KILOGRAMO')}
+                            onChange={e => updateItem(item.id, { unidad: e.target.value })}
+                            className="text-xs border border-gray-200 rounded-lg px-2 py-1 bg-white text-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer">
+                            {UNIDADES_SEMI.map(u => <option key={u} value={u}>{u}</option>)}
+                          </select>
                       }
                     </td>
 
