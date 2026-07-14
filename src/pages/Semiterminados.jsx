@@ -391,16 +391,6 @@ export default function Semiterminados() {
                   <div className="flex items-center justify-end gap-1">
                     <button onClick={() => setView(item)}
                       className="px-3 py-1.5 text-xs font-medium text-gray-500 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-colors">Ver</button>
-                    <button onClick={async () => exportSemiterminado(item)}
-                      title="Descargar Excel"
-                      className="px-2 py-1.5 text-gray-400 hover:text-emerald-700 hover:bg-emerald-50 rounded-lg transition-colors">
-                      <DownloadIcon />
-                    </button>
-                    <button onClick={() => exportSemiterminadoCSV(item)}
-                      title="Descargar CSV (Olimpo)"
-                      className="px-2 py-1.5 text-gray-400 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-colors">
-                      <DownloadIcon />
-                    </button>
                     {!item.revisado ? (
                       <button onClick={() => handleRevisar(item.id)}
                         className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-semibold text-amber-700 bg-amber-50 border border-amber-300 hover:bg-amber-100 rounded-lg transition-colors">
