@@ -138,6 +138,17 @@ function newItem() {
 
 const UNIDADES_SEMI = ['KILOGRAMO', 'ML', 'PAR', 'LB']
 
+/* Unidad efectiva de un item (tintas por defecto ML, resto KILOGRAMO) */
+const effUnidad = (it) =>
+  it.unidad || ((it.mp_nombre || '').toUpperCase().includes('TINTA') ? 'ML' : 'KILOGRAMO')
+
+/* KILOGRAMO y ML entran al cálculo de peso/%. PAR y LB son solo visuales */
+const isWeightItem = (it) => {
+  if (SPECIAL_CODES.has(it.mp_codigo)) return false
+  const u = effUnidad(it)
+  return u === 'KILOGRAMO' || u === 'ML'
+}
+
 function fmt(n) {
   if (!isFinite(n) || n === 0) return '—'
   return n.toFixed(4)
@@ -187,10 +198,10 @@ export default function SemiterminadoForm({ initial, onSave, onCancel, saving })
   const pesoNum  = parseFloat(form.peso) || 0
   const pesoUnit = form.peso_unidad
 
-  /* totalKg excluye los ítems especiales (MODIREC01, CFAB01) */
+  /* totalKg solo suma items en KILOGRAMO/ML (excluye especiales y PAR/LB) */
   const totalKg = useMemo(() =>
     form.items
-      .filter(i => !SPECIAL_CODES.has(i.mp_codigo))
+      .filter(isWeightItem)
       .reduce((s, i) => s + (parseFloat(i.kg) || 0), 0)
   , [form.items])
 
@@ -380,9 +391,10 @@ export default function SemiterminadoForm({ initial, onSave, onCancel, saving })
               {form.items.map((item, idx) => {
                 const isSpecial = SPECIAL_CODES.has(item.mp_codigo)
                 const isTinta   = !isSpecial && (item.mp_nombre || '').toUpperCase().includes('TINTA')
+                const isWeight  = isWeightItem(item)
                 const kg        = isSpecial ? pesoNum : (parseFloat(item.kg) || 0)
-                const pct       = (!isSpecial && totalKg > 0) ? (kg / totalKg) * 100 : null
-                const xPieza    = (!isSpecial && totalKg > 0 && pesoNum > 0) ? (kg / totalKg) * pesoNum : null
+                const pct       = (isWeight && totalKg > 0) ? (kg / totalKg) * 100 : null
+                const xPieza    = (isWeight && totalKg > 0 && pesoNum > 0) ? (kg / totalKg) * pesoNum : null
 
                 return (
                   <tr key={item.id}
