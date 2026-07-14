@@ -320,8 +320,8 @@ export default function ProductosTerminados() {
           placeholder="Buscar por nombre o código…" />
       </div>
 
-      <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-        <table className="w-full">
+      <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-x-auto">
+        <table className="w-full min-w-[900px]">
           <thead>
             <tr className="bg-gray-50 border-b border-gray-200 text-xs font-semibold text-gray-500 uppercase tracking-wider">
               <th className="text-left px-6 py-3.5 w-40">Código</th>
