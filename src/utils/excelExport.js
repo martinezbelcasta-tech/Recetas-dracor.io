@@ -1,6 +1,17 @@
 import ExcelJS from 'exceljs'
 
-const SPECIAL_CODES = new Set(['MODIREC01', 'CFAB01'])
+const SPECIAL_CODES = new Set(['MODIREC01', 'CFAB01', 'MODIREC02', 'CFAB02'])
+
+/* Unidad efectiva de un item de semiterminado (tintas por defecto ML, resto KILOGRAMO) */
+const effUnidad = (it) =>
+  it.unidad || ((it.mp_nombre || '').toUpperCase().includes('TINTA') ? 'ML' : 'KILOGRAMO')
+
+/* KILOGRAMO y ML entran al cálculo de peso/%. PAR y LB son solo visuales */
+const isWeightItem = (it) => {
+  if (SPECIAL_CODES.has(it.mp_codigo)) return false
+  const u = effUnidad(it)
+  return u === 'KILOGRAMO' || u === 'ML'
+}
 
 /* ── helpers ─────────────────────────────────────────────────────── */
 const BORDER = {
@@ -132,18 +143,19 @@ export async function exportSemiterminado(item) {
   /* ── Cálculos */
   const pesoNum = parseFloat(item.peso) || 0
   const totalKg = item.items
-    .filter(i => !SPECIAL_CODES.has(i.mp_codigo))
+    .filter(isWeightItem)
     .reduce((s, i) => s + (parseFloat(i.kg) || 0), 0)
 
   /* ── Filas de datos */
   item.items.forEach((itm, idx) => {
     const isSpecial = SPECIAL_CODES.has(itm.mp_codigo)
+    const isWeight  = isWeightItem(itm)
     const kg        = parseFloat(itm.kg) || 0
-    const pct       = !isSpecial && totalKg > 0
+    const pct       = isWeight && totalKg > 0
       ? (kg / totalKg * 100).toFixed(2) + ' %' : '—'
     const xPieza   = isSpecial
       ? (pesoNum > 0 ? pesoNum.toFixed(4) : '—')
-      : (totalKg > 0 && pesoNum > 0 ? (kg / totalKg * pesoNum).toFixed(4) : '—')
+      : (isWeight && totalKg > 0 && pesoNum > 0 ? (kg / totalKg * pesoNum).toFixed(4) : '—')
 
     const r = ws.addRow([
       idx + 1,
@@ -152,7 +164,7 @@ export async function exportSemiterminado(item) {
       isSpecial ? '—' : (kg || '—'),
       pct,
       xPieza,
-      isSpecial ? 'UNIDAD' : 'KILOGRAMO',
+      isSpecial ? 'UNIDAD' : effUnidad(itm),
       isSpecial ? 'UBI07GIF' : itm.ubi_codigo,
       isSpecial ? 'Costos Directos de Fabricacion' : itm.ubi_nombre,
     ])
@@ -221,7 +233,7 @@ function downloadCsv(rows, filename) {
 export function exportSemiterminadoCSV(item) {
   const pesoNum = parseFloat(item.peso) || 0
   const totalKg = item.items
-    .filter(i => !SPECIAL_CODES.has(i.mp_codigo))
+    .filter(isWeightItem)
     .reduce((s, i) => s + (parseFloat(i.kg) || 0), 0)
 
   const rows = [
@@ -229,11 +241,12 @@ export function exportSemiterminadoCSV(item) {
   ]
   item.items.forEach((itm, idx) => {
     const isSpecial = SPECIAL_CODES.has(itm.mp_codigo)
+    const isWeight  = isWeightItem(itm)
     const kg        = parseFloat(itm.kg) || 0
-    const pct       = !isSpecial && totalKg > 0 ? (kg / totalKg * 100).toFixed(2) : ''
+    const pct       = isWeight && totalKg > 0 ? (kg / totalKg * 100).toFixed(2) : ''
     const xPieza   = isSpecial
       ? (pesoNum > 0 ? pesoNum.toFixed(4) : '')
-      : (totalKg > 0 && pesoNum > 0 ? (kg / totalKg * pesoNum).toFixed(4) : '')
+      : (isWeight && totalKg > 0 && pesoNum > 0 ? (kg / totalKg * pesoNum).toFixed(4) : '')
     rows.push([
       idx + 1,
       itm.mp_codigo,
@@ -241,7 +254,7 @@ export function exportSemiterminadoCSV(item) {
       isSpecial ? '' : (kg || ''),
       pct,
       xPieza,
-      isSpecial ? 'UNIDAD' : 'KILOGRAMO',
+      isSpecial ? 'UNIDAD' : effUnidad(itm),
       isSpecial ? 'UBI07GIF' : itm.ubi_codigo,
       isSpecial ? 'Costos Directos de Fabricacion' : itm.ubi_nombre,
     ])
