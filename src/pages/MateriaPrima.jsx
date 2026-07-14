@@ -164,6 +164,7 @@ const RAW = [
   { codigo: 'ME20002600214', nombre: 'TINTA IMPRESORA SUNTHINKS AMARILLO' },
   { codigo: 'ME20002600308', nombre: 'TINTA IMPRESORA SUNTHINKS BLANCO' },
   { codigo: 'ME20002600404', nombre: 'TINTA IMPRESORA SUNTHINKS MAGENTA' },
+  { codigo: 'ST10000416030', nombre: 'PUERTA LISA FRESA ONDAS' },
 ]
 
 function getCategoria(nombre) {
