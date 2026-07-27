@@ -1,7 +1,8 @@
 import { useState, useMemo, useRef, useEffect } from 'react'
 import { MP_LIST } from '../data/materias-primas'
 import { UBI_LIST } from '../data/ubicaciones'
-import { getMpExtra, getUbiExtra } from '../lib/db'
+import { PRODUCTOS } from '../data/consolidado'
+import { getMpExtra, getUbiExtra, getCatalogoExtra } from '../lib/db'
 
 /* Ítems de costo que siempre usan el peso de la pieza como cantidad */
 const COST_ITEMS = [
@@ -18,8 +19,9 @@ function matchTokens(query, item) {
   return query.toLowerCase().trim().split(/\s+/).every(t => haystack.includes(t))
 }
 
-function SearchModal({ title, data, onSelect, onClose }) {
+function SearchModal({ title, data, filter, onSelect, onClose }) {
   const [query, setQuery] = useState('')
+  const [onlyPrimary, setOnlyPrimary] = useState(true)
   const inputRef = useRef(null)
 
   useEffect(() => { inputRef.current?.focus() }, [])
@@ -29,9 +31,10 @@ function SearchModal({ title, data, onSelect, onClose }) {
     return () => document.removeEventListener('keydown', h)
   }, [onClose])
 
+  const source = filter ? (onlyPrimary ? filter.primary : filter.secondary) : data
   const results = useMemo(() =>
-    data.filter(d => matchTokens(query, d)).slice(0, 80)
-  , [data, query])
+    source.filter(d => matchTokens(query, d)).slice(0, 80)
+  , [source, query])
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-6"
@@ -48,6 +51,19 @@ function SearchModal({ title, data, onSelect, onClose }) {
           <button onClick={onClose}
             className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-colors text-lg">×</button>
         </div>
+        {filter && (
+          <div className="px-6 py-2.5 border-b border-gray-100 flex items-center justify-between bg-gray-50/60">
+            <span className="text-xs text-gray-500">
+              {onlyPrimary ? 'Mostrando: solo materia prima' : 'Mostrando: consolidado completo'}
+            </span>
+            <button type="button" onClick={() => setOnlyPrimary(v => !v)} className="flex items-center gap-2 group">
+              <span className="text-xs font-medium text-gray-600 group-hover:text-gray-900">{filter.label}</span>
+              <div className={`relative w-9 h-5 rounded-full transition-colors ${onlyPrimary ? 'bg-blue-600' : 'bg-gray-300'}`}>
+                <span className={`absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow-sm transition-transform ${onlyPrimary ? 'translate-x-4' : ''}`} />
+              </div>
+            </button>
+          </div>
+        )}
         <div className="px-6 py-3 border-b border-gray-100">
           <div className="relative">
             <svg className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4"
@@ -90,7 +106,7 @@ function SearchModal({ title, data, onSelect, onClose }) {
         </div>
         <div className="px-6 py-3 border-t border-gray-100 bg-gray-50 rounded-b-2xl">
           <p className="text-xs text-gray-400">
-            {data.length} registros · <kbd className="bg-gray-200 text-gray-600 px-1.5 py-0.5 rounded text-xs font-mono">Esc</kbd> para cerrar
+            {source.length} registros · <kbd className="bg-gray-200 text-gray-600 px-1.5 py-0.5 rounded text-xs font-mono">Esc</kbd> para cerrar
           </p>
         </div>
       </div>
@@ -166,10 +182,12 @@ export default function SemiterminadoForm({ initial, onSave, onCancel, saving })
   const [codigoManual, setCodigoManual] = useState(!!initial)
   const [mpExtras, setMpExtras] = useState([])
   const [ubiExtras, setUbiExtras] = useState([])
+  const [catalogoExtras, setCatalogoExtras] = useState([])
 
   useEffect(() => {
     getMpExtra().then(setMpExtras).catch(() => {})
     getUbiExtra().then(setUbiExtras).catch(() => {})
+    getCatalogoExtra().then(setCatalogoExtras).catch(() => {})
   }, [])
 
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }))
@@ -543,7 +561,12 @@ export default function SemiterminadoForm({ initial, onSave, onCancel, saving })
       </div>
 
       {modal?.type === 'mp' && (
-        <SearchModal title="Buscar Materia Prima" data={[...COST_ITEMS, ...mpExtras, ...MP_LIST]}
+        <SearchModal title="Buscar Materia Prima"
+          filter={{
+            label: 'Solo materia prima',
+            primary: [...COST_ITEMS, ...mpExtras, ...MP_LIST],
+            secondary: [...catalogoExtras, ...PRODUCTOS],
+          }}
           onSelect={mp => {
             const patch = { mp_codigo: mp.codigo, mp_nombre: mp.nombre }
             if (SPECIAL_CODES.has(mp.codigo)) {

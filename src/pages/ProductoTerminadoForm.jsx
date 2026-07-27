@@ -497,7 +497,7 @@ export default function ProductoTerminadoForm({ initial, onSave, onCancel, savin
       </div>
 
       {modal?.type === 'comp' && (
-        <SearchModal title="Buscar Componente" data={[...COST_ITEMS, ...catalogoExtras, ...PRODUCTOS]}
+        <SearchModal title="Buscar Componente" data={[...catalogoExtras, ...COST_ITEMS, ...PRODUCTOS]}
           onSelect={c => {
             const patch = { comp_codigo: c.codigo, comp_nombre: c.nombre, unidad: 'Unidad' }
             if (SPECIAL_CODES.has(c.codigo)) {
