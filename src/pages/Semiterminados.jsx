@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import SemiterminadoForm from './SemiterminadoForm'
 import { exportSemiterminado, exportSemiterminadoCSV } from '../utils/excelExport'
 import { getSemiterminados, saveSemiterminado, deleteSemiterminado, logAction, marcarRevisado } from '../lib/db'
+import { useCanEdit } from '../lib/auth'
 import Pagination from '../components/Pagination'
 
 const SPECIAL_CODES = new Set(['MODIREC01', 'CFAB01'])
@@ -27,7 +28,7 @@ function DownloadIcon() {
   )
 }
 
-function DetailView({ item, onBack, onEdit, onRevisar }) {
+function DetailView({ item, onBack, onEdit, onRevisar, canEdit }) {
   const dims    = ['ancho', 'alto', 'largo', 'profundidad'].filter(d => item[d])
   const pesoNum = parseFloat(item.peso) || 0
 
@@ -95,10 +96,12 @@ function DetailView({ item, onBack, onEdit, onRevisar }) {
             <DownloadIcon />
             Descargar CSV
           </button>
-          <button onClick={onEdit}
-            className="bg-amber-500 hover:bg-amber-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
-            Editar receta
-          </button>
+          {canEdit && (
+            <button onClick={onEdit}
+              className="bg-amber-500 hover:bg-amber-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
+              Editar receta
+            </button>
+          )}
         </div>
       </div>
 
@@ -207,6 +210,7 @@ function DetailView({ item, onBack, onEdit, onRevisar }) {
 }
 
 export default function Semiterminados() {
+  const canEdit = useCanEdit()
   const [list, setList]         = useState([])
   const [loading, setLoading]   = useState(true)
   const [saving, setSaving]     = useState(false)
@@ -299,6 +303,7 @@ export default function Semiterminados() {
         onBack={() => setView(null)}
         onEdit={() => { setFormData(view); setView(null) }}
         onRevisar={handleRevisar}
+        canEdit={canEdit}
       />
     )
   }
@@ -405,8 +410,10 @@ export default function Semiterminados() {
                     )}
                     <button onClick={() => handleReplicar(item)}
                       className="px-3 py-1.5 text-xs font-medium text-gray-500 hover:text-violet-700 hover:bg-violet-50 rounded-lg transition-colors">Replicar</button>
-                    <button onClick={() => setFormData(item)}
-                      className="px-3 py-1.5 text-xs font-medium text-gray-500 hover:text-amber-700 hover:bg-amber-50 rounded-lg transition-colors">Editar</button>
+                    {canEdit && (
+                      <button onClick={() => setFormData(item)}
+                        className="px-3 py-1.5 text-xs font-medium text-gray-500 hover:text-amber-700 hover:bg-amber-50 rounded-lg transition-colors">Editar</button>
+                    )}
                     <button onClick={() => remove(item.id, item.nombre)}
                       className="px-3 py-1.5 text-xs font-medium text-gray-500 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors">Eliminar</button>
                   </div>
