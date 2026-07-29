@@ -166,7 +166,7 @@ function PesoField({ label, hint, value, onValue, unit, onUnit }) {
   )
 }
 
-export default function ProductoTerminadoForm({ initial, onSave, onCancel, saving }) {
+export default function ProductoTerminadoForm({ initial, onSave, onCancel, saving, draftKey }) {
   const [form, setForm] = useState(() => initial ? { ...initial } : {
     nombre: '', codigo: '',
     peso_neto: '', peso_neto_unidad: 'kg',
@@ -184,6 +184,14 @@ export default function ProductoTerminadoForm({ initial, onSave, onCancel, savin
     getCatalogoExtra().then(setCatalogoExtras).catch(() => {})
     getUbiExtra().then(setUbiExtras).catch(() => {})
   }, [])
+
+  // Borrador automático (solo replicación): guarda el progreso ante cambio de apartado.
+  // ponytail: no persiste la foto (los File no serializan a JSON).
+  useEffect(() => {
+    if (!draftKey) return
+    const { foto, ...rest } = form
+    localStorage.setItem(draftKey, JSON.stringify(rest))
+  }, [form, draftKey])
 
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }))
 

@@ -209,6 +209,13 @@ function DetailView({ item, onBack, onEdit, onRevisar, canEdit }) {
   )
 }
 
+const DRAFT_KEY = 'draft:semiterminado'
+function loadDraft() {
+  const d = localStorage.getItem(DRAFT_KEY)
+  if (!d) return null
+  try { return JSON.parse(d) } catch { return null }
+}
+
 export default function Semiterminados() {
   const canEdit = useCanEdit()
   const [list, setList]         = useState([])
@@ -216,8 +223,12 @@ export default function Semiterminados() {
   const [saving, setSaving]     = useState(false)
   const [view, setView]         = useState(null)
   const [formData, setFormData] = useState(null)
+  const [isDraft, setIsDraft]   = useState(false)
+  const [draft, setDraft]       = useState(loadDraft)
   const [search, setSearch]     = useState('')
   const [page, setPage]         = useState(1)
+
+  const clearDraft = () => { localStorage.removeItem(DRAFT_KEY); setDraft(null); setIsDraft(false) }
 
   const load = async () => {
     setLoading(true)
@@ -246,6 +257,7 @@ export default function Semiterminados() {
         : [saved, ...l]
       )
       setFormData(null)
+      clearDraft()
     } catch (e) {
       console.error(e)
       alert('Error al guardar: ' + (e?.message || JSON.stringify(e)))
@@ -254,6 +266,7 @@ export default function Semiterminados() {
   }
 
   const handleReplicar = (item) => {
+    setIsDraft(true)
     setFormData({
       ...item,
       id: undefined,
@@ -290,8 +303,9 @@ export default function Semiterminados() {
       <SemiterminadoForm
         initial={formData === 'new' ? null : formData}
         onSave={handleSave}
-        onCancel={() => setFormData(null)}
+        onCancel={() => { setFormData(null); if (isDraft) clearDraft() }}
         saving={saving}
+        draftKey={isDraft ? DRAFT_KEY : null}
       />
     )
   }
@@ -332,6 +346,24 @@ export default function Semiterminados() {
           Nueva Receta
         </button>
       </div>
+
+      {draft && (
+        <div className="flex items-center justify-between gap-4 mb-5 px-4 py-3 rounded-xl border border-amber-300 bg-amber-50">
+          <p className="text-sm text-amber-800">
+            Tienes una réplica sin terminar{draft.nombre ? <>: <strong>{draft.nombre}</strong></> : ''}.
+          </p>
+          <div className="flex items-center gap-2 shrink-0">
+            <button onClick={() => { setIsDraft(true); setFormData(draft) }}
+              className="px-3 py-1.5 text-sm font-medium text-white bg-amber-500 hover:bg-amber-600 rounded-lg transition-colors">
+              Continuar
+            </button>
+            <button onClick={clearDraft}
+              className="px-3 py-1.5 text-sm font-medium text-amber-700 hover:bg-amber-100 rounded-lg transition-colors">
+              Descartar
+            </button>
+          </div>
+        </div>
+      )}
 
       <div className="relative mb-5">
         <svg className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">

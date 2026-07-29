@@ -170,7 +170,7 @@ function fmt(n) {
   return n.toFixed(4)
 }
 
-export default function SemiterminadoForm({ initial, onSave, onCancel, saving }) {
+export default function SemiterminadoForm({ initial, onSave, onCancel, saving, draftKey }) {
   const [form, setForm] = useState(() => initial ? { ...initial } : {
     nombre: '', codigo: '',
     peso: '', peso_unidad: 'g',
@@ -189,6 +189,14 @@ export default function SemiterminadoForm({ initial, onSave, onCancel, saving })
     getUbiExtra().then(setUbiExtras).catch(() => {})
     getCatalogoExtra().then(setCatalogoExtras).catch(() => {})
   }, [])
+
+  // Borrador automático (solo replicación): guarda el progreso ante cambio de apartado.
+  // ponytail: no persiste la foto (los File no serializan a JSON).
+  useEffect(() => {
+    if (!draftKey) return
+    const { foto, ...rest } = form
+    localStorage.setItem(draftKey, JSON.stringify(rest))
+  }, [form, draftKey])
 
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }))
 
