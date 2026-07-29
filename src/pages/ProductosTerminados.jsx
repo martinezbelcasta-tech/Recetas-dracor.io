@@ -286,7 +286,7 @@ export default function ProductosTerminados() {
       <ProductoTerminadoForm
         initial={formData === 'new' ? null : formData}
         onSave={handleSave}
-        onCancel={() => { setFormData(null); if (isDraft) clearDraft() }}
+        onCancel={() => { setFormData(null); setIsDraft(false); setDraft(loadDraft()) }}
         saving={saving}
         draftKey={isDraft ? DRAFT_KEY : null}
       />
