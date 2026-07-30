@@ -44,6 +44,23 @@ async function resolvePhotoUrl(foto, foto_preview, storagePath) {
   return null
 }
 
+// Trae TODOS los items paginando: Supabase corta cada request en 1000 filas.
+// Orden (fk, sort_order) es único → paginación estable y cada grupo queda ordenado.
+async function fetchAllItems(table, fkCol, ids) {
+  if (!ids.length) return []
+  const all = []
+  for (let from = 0; ; from += 1000) {
+    const { data, error } = await supabase
+      .from(table).select('*').in(fkCol, ids)
+      .order(fkCol).order('sort_order')
+      .range(from, from + 999)
+    if (error) throw error
+    all.push(...data)
+    if (data.length < 1000) break
+  }
+  return all
+}
+
 // ── SEMITERMINADOS ───────────────────────────────────────────────────────────
 async function fetchOneSemiterminado(id) {
   const { data, error } = await supabase
@@ -63,18 +80,11 @@ export async function getSemiterminados() {
   if (error) throw error
 
   const ids = data.map(r => r.id)
-  let itemsMap = {}
-  if (ids.length) {
-    const { data: its } = await supabase
-      .from('semiterminado_items')
-      .select('*')
-      .in('semiterminado_id', ids)
-      .order('sort_order')
-    ;(its || []).forEach(it => {
-      if (!itemsMap[it.semiterminado_id]) itemsMap[it.semiterminado_id] = []
-      itemsMap[it.semiterminado_id].push(it)
-    })
-  }
+  const itemsMap = {}
+  ;(await fetchAllItems('semiterminado_items', 'semiterminado_id', ids)).forEach(it => {
+    if (!itemsMap[it.semiterminado_id]) itemsMap[it.semiterminado_id] = []
+    itemsMap[it.semiterminado_id].push(it)
+  })
 
   return data.map(r => ({
     ...r,
@@ -147,18 +157,11 @@ export async function getProductosTerminados() {
   if (error) throw error
 
   const ids = data.map(r => r.id)
-  let itemsMap = {}
-  if (ids.length) {
-    const { data: its } = await supabase
-      .from('producto_items')
-      .select('*')
-      .in('producto_id', ids)
-      .order('sort_order')
-    ;(its || []).forEach(it => {
-      if (!itemsMap[it.producto_id]) itemsMap[it.producto_id] = []
-      itemsMap[it.producto_id].push(it)
-    })
-  }
+  const itemsMap = {}
+  ;(await fetchAllItems('producto_items', 'producto_id', ids)).forEach(it => {
+    if (!itemsMap[it.producto_id]) itemsMap[it.producto_id] = []
+    itemsMap[it.producto_id].push(it)
+  })
 
   return data.map(r => ({
     ...r,
