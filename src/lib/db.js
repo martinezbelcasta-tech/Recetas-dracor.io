@@ -39,7 +39,8 @@ async function uploadFoto(file, storagePath) {
 
 async function resolvePhotoUrl(foto, foto_preview, storagePath) {
   if (foto instanceof File) return await uploadFoto(foto, storagePath)
-  if (foto_preview) return foto_preview  // URL existente, conservar
+  // blob: es una URL temporal del navegador (muere al recargar). Nunca guardarla.
+  if (foto_preview && !foto_preview.startsWith('blob:')) return foto_preview  // URL existente, conservar
   return null
 }
 
@@ -57,6 +58,7 @@ export async function getSemiterminados() {
   const { data, error } = await supabase
     .from('semiterminados')
     .select('*')
+    .order('revisado_at', { ascending: false, nullsFirst: false })  // revisadas arriba, más reciente primero
     .order('created_at', { ascending: false })
   if (error) throw error
 
@@ -140,6 +142,7 @@ export async function getProductosTerminados() {
   const { data, error } = await supabase
     .from('productos_terminados')
     .select('*')
+    .order('revisado_at', { ascending: false, nullsFirst: false })  // revisadas arriba, más reciente primero
     .order('created_at', { ascending: false })
   if (error) throw error
 

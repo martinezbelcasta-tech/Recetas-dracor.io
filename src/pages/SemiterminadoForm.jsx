@@ -191,11 +191,11 @@ export default function SemiterminadoForm({ initial, onSave, onCancel, saving, d
   }, [])
 
   // Borrador automático (solo replicación): guarda el progreso ante cambio de apartado.
-  // ponytail: no persiste la foto (los File no serializan a JSON).
+  // ponytail: no persiste la foto (los File no serializan) ni el preview blob: (muere al recargar).
   useEffect(() => {
     if (!draftKey) return
-    const { foto, ...rest } = form
-    localStorage.setItem(draftKey, JSON.stringify(rest))
+    const { foto, foto_preview, ...rest } = form
+    localStorage.setItem(draftKey, JSON.stringify({ ...rest, foto_preview: foto_preview?.startsWith('blob:') ? null : foto_preview }))
   }, [form, draftKey])
 
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }))
