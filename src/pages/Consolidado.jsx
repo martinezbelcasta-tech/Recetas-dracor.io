@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect } from 'react'
-import { PRODUCTOS } from '../data/consolidado'
-import { getCatalogoExtra, addCatalogoExtra, deleteCatalogoExtra, logAction } from '../lib/db'
+import { PRODUCTOS } from '../data/consolidado'  // fallback empaquetado si el API no responde
+import { getCatalogoExtra, addCatalogoExtra, deleteCatalogoExtra, logAction, getConsolidadoProductos } from '../lib/db'
 
 function AgregarModal({ onClose, onSave }) {
   const [form, setForm] = useState({ codigo: '', nombre: '', categoria: 'Prod. Terminado' })
@@ -62,6 +62,7 @@ const PER_PAGE = 10
 
 export default function Consolidado() {
   const [extras, setExtras] = useState([])
+  const [productos, setProductos] = useState(PRODUCTOS)  // arranca con lo empaquetado, luego lo reemplaza el API
   const [search, setSearch] = useState('')
   const [cat, setCat] = useState('Todos')
   const [page, setPage] = useState(1)
@@ -69,9 +70,10 @@ export default function Consolidado() {
 
   useEffect(() => {
     getCatalogoExtra().then(setExtras).catch(console.error)
+    getConsolidadoProductos().then(setProductos).catch(console.error)  // datos vivos; si falla, se queda el fallback
   }, [])
 
-  const all = useMemo(() => [...extras, ...PRODUCTOS], [extras])
+  const all = useMemo(() => [...extras, ...productos], [extras, productos])
 
   const handleSave = async (item) => {
     try {
@@ -142,7 +144,7 @@ export default function Consolidado() {
         {CATEGORIAS.map(c => {
           const isActive = cat === c
           const style = CAT_STYLE[c]
-          const count = c === 'Todos' ? PRODUCTOS.length : counts[c]
+          const count = c === 'Todos' ? all.length : counts[c]
           return (
             <button
               key={c}

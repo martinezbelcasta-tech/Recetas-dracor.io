@@ -225,6 +225,33 @@ export async function marcarRevisado(tabla, id) {
   if (error) throw error
 }
 
+// ── CONSOLIDADO (API externa Sanchia) ────────────────────────────────────────
+const CONSOLIDADO_API = 'https://sanchia-api-mx8id.ondigitalocean.app/api/manufactures/products'
+
+// Categoría se deduce del prefijo del código (el API no la trae).
+const catFromCodigo = (code = '') =>
+  code.startsWith('PT') ? 'Prod. Terminado'
+  : code.startsWith('ST') ? 'Semiterminado'
+  : code.startsWith('ME') ? 'Empaque'
+  : 'Otro'
+
+const CONSOLIDADO_CACHE_KEY = 'consolidado:v1'
+const CONSOLIDADO_TTL = 30 * 60 * 1000  // 30 min
+
+export async function getConsolidadoProductos() {
+  // cache fresco → sin red (persiste entre recargas)
+  try {
+    const c = JSON.parse(localStorage.getItem(CONSOLIDADO_CACHE_KEY) || 'null')
+    if (c && Date.now() - c.t < CONSOLIDADO_TTL) return c.d
+  } catch { /* cache corrupto, se ignora */ }
+
+  const res = await fetch(CONSOLIDADO_API)
+  if (!res.ok) throw new Error(`API consolidado ${res.status}`)
+  const data = (await res.json()).map(p => ({ codigo: p.code, nombre: p.name, categoria: catFromCodigo(p.code) }))
+  try { localStorage.setItem(CONSOLIDADO_CACHE_KEY, JSON.stringify({ t: Date.now(), d: data })) } catch { /* quota llena */ }
+  return data
+}
+
 // ── CATÁLOGO EXTRA ───────────────────────────────────────────────────────────
 export async function getCatalogoExtra() {
   const { data } = await supabase.from('catalogo_extra').select('*').order('created_at', { ascending: false })
