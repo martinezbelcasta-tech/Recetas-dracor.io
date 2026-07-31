@@ -238,16 +238,20 @@ const catFromCodigo = (code = '') =>
 const CONSOLIDADO_CACHE_KEY = 'consolidado:v1'
 const CONSOLIDADO_TTL = 30 * 60 * 1000  // 30 min
 
-export async function getConsolidadoProductos() {
-  // cache fresco → sin red (persiste entre recargas)
-  try {
-    const c = JSON.parse(localStorage.getItem(CONSOLIDADO_CACHE_KEY) || 'null')
-    if (c && Date.now() - c.t < CONSOLIDADO_TTL) return c.d
-  } catch { /* cache corrupto, se ignora */ }
+export async function getConsolidadoProductos({ force = false } = {}) {
+  // cache fresco → sin red (persiste entre recargas). "force" lo salta (botón Sincronizar).
+  if (!force) {
+    try {
+      const c = JSON.parse(localStorage.getItem(CONSOLIDADO_CACHE_KEY) || 'null')
+      if (c && Date.now() - c.t < CONSOLIDADO_TTL) return c.d
+    } catch { /* cache corrupto, se ignora */ }
+  }
 
   const res = await fetch(CONSOLIDADO_API)
   if (!res.ok) throw new Error(`API consolidado ${res.status}`)
-  const data = (await res.json()).map(p => ({ codigo: p.code, nombre: p.name, categoria: catFromCodigo(p.code) }))
+  const data = (await res.json())
+    .sort((a, b) => b.id - a.id)  // id mayor = recién creado → primero
+    .map(p => ({ codigo: p.code, nombre: p.name, categoria: catFromCodigo(p.code) }))
   try { localStorage.setItem(CONSOLIDADO_CACHE_KEY, JSON.stringify({ t: Date.now(), d: data })) } catch { /* quota llena */ }
   return data
 }

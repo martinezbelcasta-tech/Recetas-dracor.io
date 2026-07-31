@@ -67,11 +67,29 @@ export default function Consolidado() {
   const [cat, setCat] = useState('Todos')
   const [page, setPage] = useState(1)
   const [modal, setModal] = useState(false)
+  const [syncing, setSyncing] = useState(false)
+  const [syncMsg, setSyncMsg] = useState('')
 
   useEffect(() => {
     getCatalogoExtra().then(setExtras).catch(console.error)
     getConsolidadoProductos().then(setProductos).catch(console.error)  // datos vivos; si falla, se queda el fallback
   }, [])
+
+  const handleSync = async () => {
+    setSyncing(true); setSyncMsg('')
+    try {
+      const fresh = await getConsolidadoProductos({ force: true })  // salta el cache
+      const nuevos = fresh.length - productos.length
+      setProductos(fresh)
+      setPage(1)  // los recientes están arriba
+      setSyncMsg(nuevos > 0 ? `+${nuevos} nuevo${nuevos !== 1 ? 's' : ''}` : 'Ya estás al día')
+      logAction('sincronizar', 'Consolidado', `${fresh.length} productos`)
+    } catch (e) {
+      console.error(e); setSyncMsg('Error al sincronizar')
+    }
+    setSyncing(false)
+    setTimeout(() => setSyncMsg(''), 4000)
+  }
 
   const all = useMemo(() => [...extras, ...productos], [extras, productos])
 
@@ -122,7 +140,20 @@ export default function Consolidado() {
             Catálogo completo de productos · {all.length.toLocaleString()} registros
           </p>
         </div>
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-3">
+          {syncMsg && (
+            <span className={`text-sm font-medium ${syncMsg.startsWith('Error') ? 'text-red-600' : 'text-emerald-600'}`}>
+              {syncMsg}
+            </span>
+          )}
+          <button onClick={handleSync} disabled={syncing}
+            className="border border-gray-300 bg-white hover:bg-gray-50 text-gray-700 px-4 py-2.5 rounded-lg text-sm font-medium flex items-center gap-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="16" height="16"
+              className={syncing ? 'animate-spin' : ''}>
+              <path d="M21 12a9 9 0 1 1-2.64-6.36" /><polyline points="21 3 21 9 15 9" />
+            </svg>
+            {syncing ? 'Sincronizando…' : 'Sincronizar'}
+          </button>
           <button onClick={() => setModal(true)}
             className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-lg text-sm font-medium flex items-center gap-2 transition-colors shadow-sm shadow-blue-200">
             <span className="text-lg leading-none">+</span> Agregar Producto
