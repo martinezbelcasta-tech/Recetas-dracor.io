@@ -377,10 +377,10 @@ export default function MateriaPrima() {
                 </td>
               </tr>
             )}
-            {paginated.map(m => {
+            {paginated.map((m, i) => {
               const style = CATEGORIA_STYLE[m.categoria]
               return (
-                <tr key={m.codigo} className="hover:bg-gray-50/80 transition-colors group">
+                <tr key={`${m.codigo}#${i}`} className="hover:bg-gray-50/80 transition-colors group">
                   <td className="px-6 py-3.5">
                     <span className="font-mono text-sm bg-slate-100 text-slate-700 px-2 py-1 rounded-md whitespace-nowrap">
                       {m.codigo}

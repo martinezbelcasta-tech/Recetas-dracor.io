@@ -238,10 +238,10 @@ export default function Consolidado() {
                 </td>
               </tr>
             )}
-            {paginated.map(p => {
+            {paginated.map((p, i) => {
               const style = CAT_STYLE[p.categoria]
               return (
-                <tr key={p.codigo} className="hover:bg-gray-50/80 transition-colors group">
+                <tr key={`${p.codigo}#${i}`} className="hover:bg-gray-50/80 transition-colors group">
                   <td className="px-6 py-3.5">
                     <span className="font-mono text-sm bg-slate-100 text-slate-700 px-2 py-1 rounded-md whitespace-nowrap">
                       {p.codigo}

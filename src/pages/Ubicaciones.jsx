@@ -303,10 +303,10 @@ export default function Ubicaciones() {
                 </td>
               </tr>
             )}
-            {paginated.map(u => {
+            {paginated.map((u, i) => {
               const badge = NIVEL_BADGE[u.nivel]
               return (
-                <tr key={u.codigo} className="hover:bg-blue-50/20 transition-colors group">
+                <tr key={`${u.codigo}#${i}`} className="hover:bg-blue-50/20 transition-colors group">
                   <td className="px-6 py-3.5">
                     <span className="font-mono text-sm bg-slate-100 text-slate-700 px-2 py-1 rounded-md whitespace-nowrap">
                       {u.codigo}

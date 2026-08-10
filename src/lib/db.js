@@ -236,7 +236,7 @@ const catFromCodigo = (code = '') =>
   : code.startsWith('ME') ? 'Empaque'
   : 'Otro'
 
-const CONSOLIDADO_CACHE_KEY = 'consolidado:v2'  // v2: API unida con catálogo estático
+const CONSOLIDADO_CACHE_KEY = 'consolidado:v3'  // v3: unión API+estático deduplicada por código
 const CONSOLIDADO_TTL = 30 * 60 * 1000  // 30 min
 
 export async function getConsolidadoProductos({ force = false } = {}) {
@@ -255,11 +255,13 @@ export async function getConsolidadoProductos({ force = false } = {}) {
     .map(p => ({ codigo: p.code, nombre: p.name, categoria: catFromCodigo(p.code) }))
 
   // Unión: la API manda; el estático rellena los códigos que la API ya no trae (charolas, etc.).
-  const enApi = new Set(apiData.map(p => p.codigo))
-  const extraEstatico = PRODUCTOS_ESTATICO
-    .filter(p => !enApi.has(p.codigo))
-    .map(p => ({ codigo: p.codigo, nombre: p.nombre, categoria: catFromCodigo(p.codigo) }))
-  const data = [...apiData, ...extraEstatico]
+  // Dedupe por código (la API trae algún duplicado; un código repetido rompía React con removeChild).
+  const porCodigo = new Map()
+  for (const p of apiData) if (!porCodigo.has(p.codigo)) porCodigo.set(p.codigo, p)
+  for (const p of PRODUCTOS_ESTATICO)
+    if (!porCodigo.has(p.codigo))
+      porCodigo.set(p.codigo, { codigo: p.codigo, nombre: p.nombre, categoria: catFromCodigo(p.codigo) })
+  const data = [...porCodigo.values()]
 
   try { localStorage.setItem(CONSOLIDADO_CACHE_KEY, JSON.stringify({ t: Date.now(), d: data })) } catch { /* quota llena */ }
   return data
