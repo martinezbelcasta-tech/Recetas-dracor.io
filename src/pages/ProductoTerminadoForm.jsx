@@ -1,7 +1,7 @@
 import { useState, useMemo, useRef, useEffect } from 'react'
 import { PRODUCTOS } from '../data/consolidado'
 import { UBI_LIST } from '../data/ubicaciones'
-import { getCatalogoExtra, getUbiExtra } from '../lib/db'
+import { getCatalogoExtra, getUbiExtra, getConsolidadoProductos } from '../lib/db'
 
 const UNIDADES_PT = ['Kilogramo', 'Unidad', 'Pares', 'Libras', 'Metro', 'ML']
 
@@ -179,10 +179,12 @@ export default function ProductoTerminadoForm({ initial, onSave, onCancel, savin
   const [codigoManual, setCodigoManual] = useState(!!initial)
   const [catalogoExtras, setCatalogoExtras] = useState([])
   const [ubiExtras, setUbiExtras] = useState([])
+  const [productos, setProductos] = useState(PRODUCTOS)  // estático como respaldo; se reemplaza por la API
 
   useEffect(() => {
     getCatalogoExtra().then(setCatalogoExtras).catch(() => {})
     getUbiExtra().then(setUbiExtras).catch(() => {})
+    getConsolidadoProductos().then(p => { if (p?.length) setProductos(p) }).catch(() => {})
   }, [])
 
   // Borrador automático (solo replicación): guarda el progreso ante cambio de apartado.
@@ -506,7 +508,7 @@ export default function ProductoTerminadoForm({ initial, onSave, onCancel, savin
       </div>
 
       {modal?.type === 'comp' && (
-        <SearchModal title="Buscar Componente" data={[...catalogoExtras, ...COST_ITEMS, ...PRODUCTOS]}
+        <SearchModal title="Buscar Componente" data={[...catalogoExtras, ...COST_ITEMS, ...productos]}
           onSelect={c => {
             const patch = { comp_codigo: c.codigo, comp_nombre: c.nombre, unidad: 'Unidad' }
             if (SPECIAL_CODES.has(c.codigo)) {

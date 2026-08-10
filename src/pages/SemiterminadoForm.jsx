@@ -2,7 +2,7 @@ import { useState, useMemo, useRef, useEffect } from 'react'
 import { MP_LIST } from '../data/materias-primas'
 import { UBI_LIST } from '../data/ubicaciones'
 import { PRODUCTOS } from '../data/consolidado'
-import { getMpExtra, getUbiExtra, getCatalogoExtra } from '../lib/db'
+import { getMpExtra, getUbiExtra, getCatalogoExtra, getConsolidadoProductos } from '../lib/db'
 
 /* Ítems de costo que siempre usan el peso de la pieza como cantidad */
 const COST_ITEMS = [
@@ -183,11 +183,13 @@ export default function SemiterminadoForm({ initial, onSave, onCancel, saving, d
   const [mpExtras, setMpExtras] = useState([])
   const [ubiExtras, setUbiExtras] = useState([])
   const [catalogoExtras, setCatalogoExtras] = useState([])
+  const [productos, setProductos] = useState(PRODUCTOS)  // estático como respaldo; se reemplaza por la API
 
   useEffect(() => {
     getMpExtra().then(setMpExtras).catch(() => {})
     getUbiExtra().then(setUbiExtras).catch(() => {})
     getCatalogoExtra().then(setCatalogoExtras).catch(() => {})
+    getConsolidadoProductos().then(p => { if (p?.length) setProductos(p) }).catch(() => {})
   }, [])
 
   // Borrador automático (solo replicación): guarda el progreso ante cambio de apartado.
@@ -573,7 +575,7 @@ export default function SemiterminadoForm({ initial, onSave, onCancel, saving, d
           filter={{
             label: 'Solo materia prima',
             primary: [...COST_ITEMS, ...mpExtras, ...MP_LIST],
-            secondary: [...catalogoExtras, ...PRODUCTOS],
+            secondary: [...catalogoExtras, ...productos],
           }}
           onSelect={mp => {
             const patch = { mp_codigo: mp.codigo, mp_nombre: mp.nombre }
