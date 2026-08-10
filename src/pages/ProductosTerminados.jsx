@@ -4,6 +4,7 @@ import { exportProductoTerminado, exportProductoTerminadoCSV } from '../utils/ex
 import { getProductosTerminados, saveProductoTerminado, deleteProductoTerminado, logAction, marcarRevisado } from '../lib/db'
 import { useCanEdit } from '../lib/auth'
 import Pagination from '../components/Pagination'
+import ZoomableImg from '../components/ZoomableImg'
 
 const SPECIAL_CODES = new Set(['MODIREC01', 'CFAB01'])
 const PER_PAGE = 10
@@ -128,7 +129,7 @@ function DetailView({ item, onBack, onEdit, onRevisar, canEdit }) {
       <div className="grid grid-cols-5 gap-5">
         {item.foto_preview && (
           <div className="col-span-2 bg-white rounded-xl border border-gray-200 shadow-sm p-4">
-            <img src={item.foto_preview} alt={item.nombre}
+            <ZoomableImg src={item.foto_preview} alt={item.nombre}
               className="w-full h-52 object-contain rounded-lg bg-gray-50" />
           </div>
         )}
@@ -400,7 +401,7 @@ export default function ProductosTerminados() {
                 </td>
                 <td className="px-6 py-4">
                   {item.foto_preview
-                    ? <img src={item.foto_preview} alt="" className="w-9 h-9 object-cover rounded-lg border border-gray-200" />
+                    ? <ZoomableImg src={item.foto_preview} alt="" className="w-9 h-9 object-cover rounded-lg border border-gray-200" />
                     : <span className="text-gray-300 text-xs">—</span>}
                 </td>
                 <td className="px-6 py-4 text-right">
