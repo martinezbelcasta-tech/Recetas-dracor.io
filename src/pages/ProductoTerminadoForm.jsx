@@ -76,10 +76,10 @@ function SearchModal({ title, data, onSelect, onClose }) {
           {results.length === 0
             ? <div className="py-16 text-center text-gray-400 text-sm">Sin resultados para &ldquo;{query}&rdquo;</div>
             : <div className="divide-y divide-gray-50">
-                {results.map(item => {
+                {results.map((item, i) => {
                   const badge = getCategoriaBadge(item.codigo)
                   return (
-                    <button key={item.codigo} onClick={() => { onSelect(item); onClose() }}
+                    <button key={`${item.codigo}#${i}`} onClick={() => { onSelect(item); onClose() }}
                       className="w-full text-left px-6 py-3 hover:bg-blue-50 transition-colors flex items-center gap-3 group">
                       <span className={`font-mono text-xs px-2 py-1 rounded-md shrink-0 transition-colors ${
                         SPECIAL_CODES.has(item.codigo)
