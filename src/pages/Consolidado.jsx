@@ -1,6 +1,8 @@
 import { useState, useMemo, useEffect } from 'react'
 import { PRODUCTOS } from '../data/consolidado'  // fallback empaquetado si el API no responde
-import { getCatalogoExtra, addCatalogoExtra, deleteCatalogoExtra, logAction, getConsolidadoProductos } from '../lib/db'
+import { getCatalogoExtra, addCatalogoExtra, deleteCatalogoExtra, logAction, getConsolidadoProductos, getRecetasParaExplosion } from '../lib/db'
+import { buildRecipeIndex } from '../lib/explosion'
+import ExplosionDrawer from '../components/ExplosionDrawer'
 
 function AgregarModal({ onClose, onSave }) {
   const [form, setForm] = useState({ codigo: '', nombre: '', categoria: 'Prod. Terminado' })
@@ -69,6 +71,20 @@ export default function Consolidado() {
   const [modal, setModal] = useState(false)
   const [syncing, setSyncing] = useState(false)
   const [syncMsg, setSyncMsg] = useState('')
+  const [recipeIndex, setRecipeIndex] = useState(null)   // Map recetas; se arma una sola vez al primer click
+  const [loadingExplosion, setLoadingExplosion] = useState(false)
+  const [explosionCodigo, setExplosionCodigo] = useState(null)
+
+  // Carga perezosa: trae todas las recetas (PT+ST) al primer "Ver explosión" y las cachea en memoria.
+  const handleVerExplosion = async (codigo) => {
+    setExplosionCodigo(codigo)
+    if (recipeIndex || loadingExplosion) return
+    setLoadingExplosion(true)
+    try {
+      setRecipeIndex(buildRecipeIndex(await getRecetasParaExplosion()))
+    } catch (e) { console.error(e) }
+    setLoadingExplosion(false)
+  }
 
   useEffect(() => {
     getCatalogoExtra().then(setExtras).catch(console.error)
@@ -249,9 +265,23 @@ export default function Consolidado() {
               return (
                 <tr key={`${p.codigo}#${i}`} className="hover:bg-gray-50/80 transition-colors group">
                   <td className="px-6 py-3.5">
-                    <span className="font-mono text-sm bg-slate-100 text-slate-700 px-2 py-1 rounded-md whitespace-nowrap">
-                      {p.codigo}
-                    </span>
+                    <div className="flex flex-col items-start gap-1.5">
+                      <span className="font-mono text-sm bg-slate-100 text-slate-700 px-2 py-1 rounded-md whitespace-nowrap">
+                        {p.codigo}
+                      </span>
+                      <button
+                        onClick={() => handleVerExplosion(p.codigo)}
+                        title="Ver explosión de materiales"
+                        className="group/exp relative inline-flex items-center gap-2 rounded-full pl-3 pr-1 py-1 text-[11px] font-bold uppercase tracking-wider text-white border border-emerald-800/30 shadow-md bg-gradient-to-b from-emerald-400 to-emerald-700 hover:from-emerald-300 hover:to-emerald-600 active:from-emerald-500 active:to-emerald-800 transition-colors"
+                      >
+                        {/* Brillo superior (gloss) */}
+                        <span className="pointer-events-none absolute inset-x-1.5 top-0.5 h-1/3 rounded-full bg-white/30" />
+                        <span className="relative">Ver explosión</span>
+                        <span className="relative flex items-center justify-center w-4 h-4 rounded-full bg-white/25 shrink-0">
+                          <svg viewBox="0 0 24 24" width="9" height="9" fill="currentColor"><polygon points="8 5 19 12 8 19 8 5" /></svg>
+                        </span>
+                      </button>
+                    </div>
                   </td>
                   <td className="px-6 py-3.5 text-sm text-gray-800">{p.nombre}</td>
                   <td className="px-6 py-3.5 text-center">
@@ -331,6 +361,20 @@ export default function Consolidado() {
       </div>
 
       {modal && <AgregarModal onClose={() => setModal(false)} onSave={handleSave} />}
+
+      {/* Explosión de materiales */}
+      {explosionCodigo && recipeIndex && (
+        <ExplosionDrawer codigo={explosionCodigo} index={recipeIndex} onClose={() => setExplosionCodigo(null)} />
+      )}
+      {explosionCodigo && !recipeIndex && (
+        <div onClick={() => setExplosionCodigo(null)}
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
+          <div className="flex items-center gap-3 bg-white rounded-xl px-6 py-4 shadow-xl">
+            <span className="w-4 h-4 border-2 border-emerald-600 border-t-transparent rounded-full animate-spin" />
+            <span className="text-sm text-gray-600">Cargando recetas…</span>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

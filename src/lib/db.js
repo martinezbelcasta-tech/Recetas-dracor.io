@@ -172,6 +172,16 @@ export async function getProductosTerminados() {
   }))
 }
 
+// Fuente de recetas para la explosión de materiales (punto de extensión).
+// Hoy: junta lo que ya existe en Supabase. Mañana: se reemplaza por la API externa.
+export async function getRecetasParaExplosion() {
+  const [productos, semiterminados] = await Promise.all([
+    getProductosTerminados(),
+    getSemiterminados(),
+  ])
+  return { productos, semiterminados }
+}
+
 export async function saveProductoTerminado(form) {
   const { items = [], id: existingId, foto, foto_preview, ...rest } = form
   const row = { ...rest }
