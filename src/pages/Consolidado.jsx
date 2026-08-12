@@ -91,7 +91,13 @@ export default function Consolidado() {
     setTimeout(() => setSyncMsg(''), 4000)
   }
 
-  const all = useMemo(() => [...extras, ...productos], [extras, productos])
+  // API primero (viene newest-first) y luego solo los extras que la API no trae.
+  // Así lo nuevo de la API queda arriba y no se duplican extras que ya existen en el catálogo.
+  const all = useMemo(() => {
+    const enApi = new Set(productos.map(p => p.codigo))
+    const extrasReales = extras.filter(e => !enApi.has(e.codigo))
+    return [...productos, ...extrasReales]
+  }, [extras, productos])
 
   const handleSave = async (item) => {
     try {
