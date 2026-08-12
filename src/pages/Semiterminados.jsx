@@ -339,7 +339,7 @@ export default function Semiterminados() {
           <h2 className="text-2xl font-bold text-gray-900">Semiterminados</h2>
           <p className="text-gray-500 text-sm mt-0.5">Recetas de componentes intermedios · {list.length} registros</p>
         </div>
-        <button onClick={() => setFormData('new')}
+        <button onClick={() => { setIsDraft(true); setFormData('new') }}
           className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-lg text-sm font-medium flex items-center gap-2 transition-colors shadow-sm shadow-blue-200">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
             <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
@@ -351,7 +351,7 @@ export default function Semiterminados() {
       {draft && (
         <div className="flex items-center justify-between gap-4 mb-5 px-4 py-3 rounded-xl border border-amber-300 bg-amber-50">
           <p className="text-sm text-amber-800">
-            Tienes una réplica sin terminar{draft.nombre ? <>: <strong>{draft.nombre}</strong></> : ''}.
+            Tienes una receta sin terminar{draft.nombre ? <>: <strong>{draft.nombre}</strong></> : ''}.
           </p>
           <div className="flex items-center gap-2 shrink-0">
             <button onClick={() => { setIsDraft(true); setFormData(draft) }}
