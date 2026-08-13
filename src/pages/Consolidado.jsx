@@ -75,10 +75,12 @@ export default function Consolidado() {
   const [loadingExplosion, setLoadingExplosion] = useState(false)
   const [explosionCodigo, setExplosionCodigo] = useState(null)
 
-  // Carga perezosa: trae todas las recetas (PT+ST) al primer "Ver explosión" y las cachea en memoria.
+  // Refresca SIEMPRE al abrir: relee las recetas de Supabase para tomar recetas nuevas/editadas
+  // sin recargar la página. La 1ª vez muestra spinner; las siguientes abren con el índice actual
+  // y actualizan en segundo plano.
   const handleVerExplosion = async (codigo) => {
     setExplosionCodigo(codigo)
-    if (recipeIndex || loadingExplosion) return
+    if (loadingExplosion) return
     setLoadingExplosion(true)
     try {
       setRecipeIndex(buildRecipeIndex(await getRecetasParaExplosion()))
