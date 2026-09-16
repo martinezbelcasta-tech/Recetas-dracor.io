@@ -1,5 +1,6 @@
 import { supabase } from './supabase'
 import { PRODUCTOS as PRODUCTOS_ESTATICO } from '../data/consolidado'
+import { claveCache, clavesAPurgar } from './consolidadoCache'
 
 // ── activity log ─────────────────────────────────────────────────────────────
 async function getCurrentUser() {
@@ -241,7 +242,7 @@ const catFromCodigo = (code = '') =>
   : code.startsWith('ME') ? 'Empaque'
   : 'Otro'
 
-const CONSOLIDADO_CACHE_KEY = 'consolidado:v3'  // v3: unión API+estático deduplicada por código
+const CONSOLIDADO_CACHE_KEY = claveCache(PRODUCTOS_ESTATICO.length)
 const CONSOLIDADO_TTL = 30 * 60 * 1000  // 30 min
 
 export async function getConsolidadoProductos({ force = false } = {}) {
@@ -268,7 +269,11 @@ export async function getConsolidadoProductos({ force = false } = {}) {
       porCodigo.set(p.codigo, { codigo: p.codigo, nombre: p.nombre, categoria: catFromCodigo(p.codigo) })
   const data = [...porCodigo.values()]
 
-  try { localStorage.setItem(CONSOLIDADO_CACHE_KEY, JSON.stringify({ t: Date.now(), d: data })) } catch { /* quota llena */ }
+  try {
+    for (const k of clavesAPurgar(Object.keys(localStorage), CONSOLIDADO_CACHE_KEY))
+      localStorage.removeItem(k)
+    localStorage.setItem(CONSOLIDADO_CACHE_KEY, JSON.stringify({ t: Date.now(), d: data }))
+  } catch { /* quota llena */ }
   return data
 }
 
