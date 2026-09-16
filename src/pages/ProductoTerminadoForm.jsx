@@ -10,7 +10,6 @@ const COST_ITEMS = [
   { codigo: 'CFAB01',    nombre: 'Carga Fabril' },
 ]
 const SPECIAL_CODES = new Set(['MODIREC01', 'CFAB01'])
-const ALL_COMPONENTS = [...COST_ITEMS, ...PRODUCTOS]
 
 function matchTokens(query, item) {
   if (!query.trim()) return true
@@ -203,6 +202,7 @@ export default function ProductoTerminadoForm({ initial, onSave, onCancel, savin
 
   const handleFoto = (e) => {
     const file = e.target.files[0]; if (!file) return
+    if (file.size > 5 * 1024 * 1024) { alert('La foto supera 5 MB. Usa una imagen más liviana.'); return }
     setForm(f => {
       if (f.foto_preview?.startsWith('blob:')) URL.revokeObjectURL(f.foto_preview)
       return { ...f, foto: file, foto_preview: URL.createObjectURL(file) }

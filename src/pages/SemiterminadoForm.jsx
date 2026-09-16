@@ -207,6 +207,7 @@ export default function SemiterminadoForm({ initial, onSave, onCancel, saving, d
 
   const handleFoto = (e) => {
     const file = e.target.files[0]; if (!file) return
+    if (file.size > 5 * 1024 * 1024) { alert('La foto supera 5 MB. Usa una imagen más liviana.'); return }
     setForm(f => {
       if (f.foto_preview?.startsWith('blob:')) URL.revokeObjectURL(f.foto_preview)
       return { ...f, foto: file, foto_preview: URL.createObjectURL(file) }

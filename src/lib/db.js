@@ -23,11 +23,6 @@ export async function getActivityLog() {
 }
 
 // ── helpers ─────────────────────────────────────────────────────────────────
-function stripLocal(form) {
-  const { foto, foto_preview, ...rest } = form
-  return rest
-}
-
 async function uploadFoto(file, storagePath) {
   const ext = file.name.split('.').pop().toLowerCase()
   const path = `${storagePath}.${ext}`
@@ -258,7 +253,7 @@ export async function getConsolidadoProductos({ force = false } = {}) {
     } catch { /* cache corrupto, se ignora */ }
   }
 
-  const res = await fetch(CONSOLIDADO_API)
+  const res = await fetch(CONSOLIDADO_API, { signal: AbortSignal.timeout(10000) })  // corta a los 10s; el caller cae al fallback
   if (!res.ok) throw new Error(`API consolidado ${res.status}`)
   const apiData = (await res.json())
     .sort((a, b) => b.id - a.id)  // id mayor = recién creado → primero

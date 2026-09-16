@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import SemiterminadoForm from './SemiterminadoForm'
-import { exportSemiterminado, exportSemiterminadoCSV } from '../utils/excelExport'
+// Excel/CSV es respaldo → se importa bajo demanda (mantiene exceljs fuera del bundle inicial).
 import { getSemiterminados, saveSemiterminado, deleteSemiterminado, logAction, marcarRevisado } from '../lib/db'
 import { useCanEdit } from '../lib/auth'
 import Pagination from '../components/Pagination'
@@ -87,12 +87,12 @@ function DetailView({ item, onBack, onEdit, onRevisar, canEdit }) {
               Marcar revisado
             </button>
           )}
-          <button onClick={async () => exportSemiterminado(item)}
+          <button onClick={async () => (await import('../utils/excelExport')).exportSemiterminado(item)}
             className="flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-emerald-700 border border-emerald-300 bg-emerald-50 hover:bg-emerald-100 rounded-lg transition-colors">
             <DownloadIcon />
             Descargar Excel
           </button>
-          <button onClick={() => exportSemiterminadoCSV(item)}
+          <button onClick={async () => (await import('../utils/excelExport')).exportSemiterminadoCSV(item)}
             className="flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-blue-700 border border-blue-300 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors">
             <DownloadIcon />
             Descargar CSV
@@ -241,8 +241,8 @@ export default function Semiterminados() {
 
   const filtered = list
     .filter(i =>
-      i.nombre.toLowerCase().includes(search.toLowerCase()) ||
-      i.codigo.toLowerCase().includes(search.toLowerCase())
+      (i.nombre || '').toLowerCase().includes(search.toLowerCase()) ||
+      (i.codigo || '').toLowerCase().includes(search.toLowerCase())
     )
     .sort((a, b) => (a.revisado === b.revisado ? 0 : a.revisado ? 1 : -1))
 

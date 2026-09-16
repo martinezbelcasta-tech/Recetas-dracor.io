@@ -168,7 +168,7 @@ const RAW = [
 ]
 
 function getCategoria(nombre) {
-  const n = nombre.toUpperCase()
+  const n = (nombre || '').toUpperCase()
   if (n.includes('TINTA')) return 'Tinta'
   if (n.includes('COLORANTE') || n.includes('ADITIVO')) return 'Colorante'
   if (n.includes('PELETIZADO') || n.includes('PELET')) return 'Peletizado'
@@ -254,7 +254,7 @@ export default function MateriaPrima() {
   const filtered = useMemo(() => {
     const q = search.toLowerCase()
     return all.filter(m => {
-      const matchSearch = !q || m.codigo.toLowerCase().includes(q) || m.nombre.toLowerCase().includes(q)
+      const matchSearch = !q || (m.codigo || '').toLowerCase().includes(q) || (m.nombre || '').toLowerCase().includes(q)
       const matchCat = cat === 'Todos' || m.categoria === cat
       return matchSearch && matchCat
     })

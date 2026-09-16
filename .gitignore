@@ -29,3 +29,6 @@ dist-ssr
 *.sw?
 
 .vercel
+
+# Scratch de tooling local (mockups de brainstorm, pids)
+.superpowers/

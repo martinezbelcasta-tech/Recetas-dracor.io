@@ -138,7 +138,7 @@ export default function Consolidado() {
   const filtered = useMemo(() => {
     const q = search.toLowerCase()
     return all.filter(p => {
-      const matchSearch = !q || p.codigo.toLowerCase().includes(q) || p.nombre.toLowerCase().includes(q)
+      const matchSearch = !q || (p.codigo || '').toLowerCase().includes(q) || (p.nombre || '').toLowerCase().includes(q)
       const matchCat = cat === 'Todos' || p.categoria === cat
       return matchSearch && matchCat
     })

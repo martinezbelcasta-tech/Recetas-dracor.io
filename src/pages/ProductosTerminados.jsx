@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import ProductoTerminadoForm from './ProductoTerminadoForm'
-import { exportProductoTerminado, exportProductoTerminadoCSV } from '../utils/excelExport'
+// Excel/CSV es respaldo → se importa bajo demanda (mantiene exceljs fuera del bundle inicial).
 import { getProductosTerminados, saveProductoTerminado, deleteProductoTerminado, logAction, marcarRevisado } from '../lib/db'
 import { useCanEdit } from '../lib/auth'
 import Pagination from '../components/Pagination'
@@ -17,25 +17,6 @@ function getCategoriaBadge(codigo) {
     return { label: 'Empaque', cls: 'bg-blue-100 text-blue-700' }
   return { label: 'Material', cls: 'bg-gray-100 text-gray-600' }
 }
-
-const SAMPLE_DATA = [
-  {
-    id: 1,
-    nombre: 'Caja Xtreme 5 Cajones Rojo',
-    codigo: 'PT-CX5CR',
-    peso_neto: '1.250', peso_neto_unidad: 'kg',
-    peso_bruto: '1.450', peso_bruto_unidad: 'kg',
-    tiene_medidas: true, ancho: '35', alto: '80', largo: '40', profundidad: '',
-    foto: null, foto_preview: null,
-    items: [
-      { id: 1, comp_codigo: 'ST-CX',    comp_nombre: 'Caja Xtreme (Semiterminado)', unidad: 'Unidad',    cantidad: '1',    ubi_codigo: 'UBI07PRODUCCION', ubi_nombre: 'Cargos a la Produccion de Maquinas' },
-      { id: 2, comp_codigo: 'ME001',     comp_nombre: 'Bolsa Transparente',          unidad: 'Unidad',    cantidad: '1',    ubi_codigo: 'UBI07EMPAQUE',    ubi_nombre: 'Cargos a la Produccion Empaques y Suministros' },
-      { id: 3, comp_codigo: 'ME002',     comp_nombre: 'Caja de Cartón',              unidad: 'Unidad',    cantidad: '1',    ubi_codigo: 'UBI07EMPAQUE',    ubi_nombre: 'Cargos a la Produccion Empaques y Suministros' },
-      { id: 4, comp_codigo: 'MODIREC01', comp_nombre: 'Mano de Obra Directa',        unidad: 'Unidad',    cantidad: '1',    ubi_codigo: 'UBI07GIF',        ubi_nombre: 'Costos Directos de Fabricacion' },
-      { id: 5, comp_codigo: 'CFAB01',    comp_nombre: 'Carga Fabril',                unidad: 'Unidad',    cantidad: '1',    ubi_codigo: 'UBI07GIF',        ubi_nombre: 'Costos Directos de Fabricacion' },
-    ],
-  },
-]
 
 function fmtFecha(iso) {
   if (!iso) return ''
@@ -99,7 +80,7 @@ function DetailView({ item, onBack, onEdit, onRevisar, canEdit }) {
               Marcar revisado
             </button>
           )}
-          <button onClick={async () => exportProductoTerminado(item)}
+          <button onClick={async () => (await import('../utils/excelExport')).exportProductoTerminado(item)}
             className="flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-emerald-700 border border-emerald-300 bg-emerald-50 hover:bg-emerald-100 rounded-lg transition-colors">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
@@ -108,7 +89,7 @@ function DetailView({ item, onBack, onEdit, onRevisar, canEdit }) {
             </svg>
             Descargar Excel
           </button>
-          <button onClick={() => exportProductoTerminadoCSV(item)}
+          <button onClick={async () => (await import('../utils/excelExport')).exportProductoTerminadoCSV(item)}
             className="flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-blue-700 border border-blue-300 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
@@ -224,8 +205,8 @@ export default function ProductosTerminados() {
 
   const filtered = list
     .filter(i =>
-      i.nombre.toLowerCase().includes(search.toLowerCase()) ||
-      i.codigo.toLowerCase().includes(search.toLowerCase())
+      (i.nombre || '').toLowerCase().includes(search.toLowerCase()) ||
+      (i.codigo || '').toLowerCase().includes(search.toLowerCase())
     )
     .sort((a, b) => (a.revisado === b.revisado ? 0 : a.revisado ? 1 : -1))
 

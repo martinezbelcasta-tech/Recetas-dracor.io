@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { supabase } from './lib/supabase'
 import Sidebar from './components/Sidebar'
 import Login from './components/Login'
+import ErrorBoundary from './components/ErrorBoundary'
 import Semiterminados from './pages/Semiterminados'
 import ProductosTerminados from './pages/ProductosTerminados'
 import Ubicaciones from './pages/Ubicaciones'
@@ -44,7 +45,8 @@ export default function App() {
       <Sidebar active={page} onNavigate={setPage} user={user.email}
         onLogout={() => supabase.auth.signOut()} />
       <main style={{ marginLeft:'var(--sb-width)', flex:1, overflowY:'auto', minHeight:'100vh' }}>
-        {PAGES[page]}
+        {/* key={page}: al navegar se remonta y limpia el error, así una página rota no contamina las demás */}
+        <ErrorBoundary key={page}>{PAGES[page]}</ErrorBoundary>
       </main>
     </div>
   )
