@@ -277,6 +277,23 @@ export async function getConsolidadoProductos({ force = false } = {}) {
   return data
 }
 
+// ── RECETAS COMO COMPONENTES ─────────────────────────────────────────────────
+// Una receta creada en la app (PT o ST) también es un componente válido de otra
+// receta. Sin esto había que esperar a que el código apareciera en el API del
+// ERP —que puede no pasar nunca— o parchearlo a mano en el catálogo estático.
+// Select liviano: el picker solo necesita código y nombre, no los items.
+export async function getCatalogoRecetas() {
+  const [pt, st] = await Promise.all([
+    supabase.from('productos_terminados').select('codigo, nombre'),
+    supabase.from('semiterminados').select('codigo, nombre'),
+  ])
+  const porCodigo = new Map()
+  for (const r of [...(pt.data || []), ...(st.data || [])])
+    if (r.codigo && !porCodigo.has(r.codigo))
+      porCodigo.set(r.codigo, { codigo: r.codigo, nombre: r.nombre || '', origen: 'receta' })
+  return [...porCodigo.values()]
+}
+
 // ── CATÁLOGO EXTRA ───────────────────────────────────────────────────────────
 export async function getCatalogoExtra() {
   const { data } = await supabase.from('catalogo_extra').select('*').order('created_at', { ascending: false })

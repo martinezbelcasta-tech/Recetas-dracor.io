@@ -1,7 +1,8 @@
 import { useState, useMemo, useRef, useEffect } from 'react'
 import { PRODUCTOS } from '../data/consolidado'
 import { UBI_LIST } from '../data/ubicaciones'
-import { getCatalogoExtra, getUbiExtra, getConsolidadoProductos } from '../lib/db'
+import { getCatalogoExtra, getUbiExtra, getConsolidadoProductos, getCatalogoRecetas } from '../lib/db'
+import { unirComponentes } from '../lib/componentes'
 
 const UNIDADES_PT = ['Kilogramo', 'Unidad', 'Pares', 'Libras', 'Metro', 'ML']
 
@@ -17,8 +18,11 @@ function matchTokens(query, item) {
   return query.toLowerCase().trim().split(/\s+/).every(t => haystack.includes(t))
 }
 
-function getCategoriaBadge(codigo) {
+function getCategoriaBadge(codigo, item) {
   if (SPECIAL_CODES.has(codigo)) return { label: 'Costo', cls: 'bg-amber-100 text-amber-700' }
+  // Las recetas de la app suelen tener código libre (numérico, sin prefijo): sin
+  // esto caían en "Material" y no se distinguían de una materia prima.
+  if (item?.origen === 'receta') return { label: 'Receta', cls: 'bg-emerald-100 text-emerald-700' }
   if (codigo.startsWith('ST-') || codigo.startsWith('ST'))
     return { label: 'Semiterminado', cls: 'bg-violet-100 text-violet-700' }
   if (codigo.startsWith('ME') || codigo.startsWith('PT'))
@@ -76,7 +80,7 @@ function SearchModal({ title, data, onSelect, onClose }) {
             ? <div className="py-16 text-center text-gray-400 text-sm">Sin resultados para &ldquo;{query}&rdquo;</div>
             : <div className="divide-y divide-gray-50">
                 {results.map((item, i) => {
-                  const badge = getCategoriaBadge(item.codigo)
+                  const badge = getCategoriaBadge(item.codigo, item)
                   return (
                     <button key={`${item.codigo}#${i}`} onClick={() => { onSelect(item); onClose() }}
                       className="w-full text-left px-6 py-3 hover:bg-blue-50 transition-colors flex items-center gap-3 group">
@@ -175,16 +179,27 @@ export default function ProductoTerminadoForm({ initial, onSave, onCancel, savin
     items: [newItem()],
   })
   const [modal, setModal] = useState(null)
+
   const [codigoManual, setCodigoManual] = useState(!!initial)
   const [catalogoExtras, setCatalogoExtras] = useState([])
   const [ubiExtras, setUbiExtras] = useState([])
   const [productos, setProductos] = useState(PRODUCTOS)  // estático como respaldo; se reemplaza por la API
+  const [recetas, setRecetas] = useState([])             // PT y ST creados en la app
 
   useEffect(() => {
     getCatalogoExtra().then(setCatalogoExtras).catch(() => {})
     getUbiExtra().then(setUbiExtras).catch(() => {})
     getConsolidadoProductos().then(p => { if (p?.length) setProductos(p) }).catch(() => {})
+    getCatalogoRecetas().then(setRecetas).catch(() => {})
   }, [])
+
+  // Componentes del picker. Las recetas de la app van primero: es lo recién
+  // creado y lo que más se busca, y ante código repetido gana su nombre (más
+  // actual que el del catálogo). Se excluye la receta misma: no se contiene.
+  const componentes = useMemo(
+    () => unirComponentes([recetas, catalogoExtras, COST_ITEMS, productos], form.codigo),
+    [recetas, catalogoExtras, productos, form.codigo],
+  )
 
   // Borrador automático (solo replicación): guarda el progreso ante cambio de apartado.
   // ponytail: no persiste la foto (los File no serializan a JSON).
@@ -508,7 +523,7 @@ export default function ProductoTerminadoForm({ initial, onSave, onCancel, savin
       </div>
 
       {modal?.type === 'comp' && (
-        <SearchModal title="Buscar Componente" data={[...catalogoExtras, ...COST_ITEMS, ...productos]}
+        <SearchModal title="Buscar Componente" data={componentes}
           onSelect={c => {
             const patch = { comp_codigo: c.codigo, comp_nombre: c.nombre, unidad: 'Unidad' }
             if (SPECIAL_CODES.has(c.codigo)) {
