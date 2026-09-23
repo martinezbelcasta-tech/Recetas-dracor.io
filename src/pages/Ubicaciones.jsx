@@ -194,7 +194,7 @@ export default function Ubicaciones() {
   const all = useMemo(() => [...extras, ...RAW], [extras])
 
   const filtered = useMemo(() => {
-    const q = search.toLowerCase()
+    const q = search.trim().toLowerCase()
     return all.filter(u => {
       const matchSearch = !q || (u.codigo || '').toLowerCase().includes(q) || (u.nombre || '').toLowerCase().includes(q)
       const matchNivel = nivelFilter === '' || u.nivel === Number(nivelFilter)

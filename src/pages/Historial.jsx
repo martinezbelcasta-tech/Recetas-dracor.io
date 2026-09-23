@@ -42,7 +42,7 @@ export default function Historial() {
   const modulos = [...new Set(logs.map(l => l.modulo))]
 
   const filtered = logs.filter(l => {
-    const q = search.toLowerCase()
+    const q = search.trim().toLowerCase()
     return (!q || l.detalle?.toLowerCase().includes(q) || l.usuario?.toLowerCase().includes(q))
       && (!filterAccion || l.accion === filterAccion)
       && (!filterModulo || l.modulo === filterModulo)

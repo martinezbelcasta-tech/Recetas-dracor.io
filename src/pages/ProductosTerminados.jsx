@@ -205,8 +205,8 @@ export default function ProductosTerminados() {
 
   const filtered = list
     .filter(i =>
-      (i.nombre || '').toLowerCase().includes(search.toLowerCase()) ||
-      (i.codigo || '').toLowerCase().includes(search.toLowerCase())
+      (i.nombre || '').toLowerCase().includes(search.trim().toLowerCase()) ||
+      (i.codigo || '').toLowerCase().includes(search.trim().toLowerCase())
     )
     .sort((a, b) => (a.revisado === b.revisado ? 0 : a.revisado ? 1 : -1))
 

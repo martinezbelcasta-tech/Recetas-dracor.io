@@ -136,7 +136,7 @@ export default function Consolidado() {
   }
 
   const filtered = useMemo(() => {
-    const q = search.toLowerCase()
+    const q = search.trim().toLowerCase()  // un código pegado suele traer espacio al final
     return all.filter(p => {
       const matchSearch = !q || (p.codigo || '').toLowerCase().includes(q) || (p.nombre || '').toLowerCase().includes(q)
       const matchCat = cat === 'Todos' || p.categoria === cat

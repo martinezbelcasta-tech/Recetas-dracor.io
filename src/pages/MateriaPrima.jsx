@@ -252,7 +252,7 @@ export default function MateriaPrima() {
   const all = useMemo(() => [...extras, ...DATA], [extras])
 
   const filtered = useMemo(() => {
-    const q = search.toLowerCase()
+    const q = search.trim().toLowerCase()
     return all.filter(m => {
       const matchSearch = !q || (m.codigo || '').toLowerCase().includes(q) || (m.nombre || '').toLowerCase().includes(q)
       const matchCat = cat === 'Todos' || m.categoria === cat
